@@ -10,7 +10,7 @@
       showSizeChanger
       @showSizeChange="onChange"
       @change="onChange"
-      :showTotal="total => `总共 ${total} 条数据`"
+      :showTotal="total => `总共 ${total} 条数据` + (selRow > 0 ? '，选中 ' + selRow + ' 数据' : '')"
       :total="total"
     ></a-pagination>
   </div>
@@ -24,6 +24,10 @@ export default {
     }
   },
   props: {
+    selRow: {
+      type: Number,
+      default: 0
+    },
     current: {
       type: Number,
       default: 1

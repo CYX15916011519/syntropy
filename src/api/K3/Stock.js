@@ -1,7 +1,7 @@
 import { axiosk3 as axios } from '@/utils/K3Api'
 
 const api = {
-  BaseUrl: '/K3API/MaterialGroup/',
+  BaseUrl: '/K3API/Stock/',
   Get: 'GetTemplate',
   GetAll: 'GetList',
   Create: 'Save',
@@ -24,7 +24,7 @@ export function Get (parameter) {
 export function GetAll (parameter) {
   return axios({
     url: api.BaseUrl + api.GetAll,
-    method: 'post',
+    method: 'Post',
     data: parameter
   })
 }

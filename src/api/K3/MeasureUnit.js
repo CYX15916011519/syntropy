@@ -1,7 +1,7 @@
 import { axiosk3 as axios } from '@/utils/K3Api'
 
 const api = {
-  BaseUrl: '/K3API/MaterialGroup/',
+  BaseUrl: '/K3API/MeasureUnit/',
   Get: 'GetTemplate',
   GetAll: 'GetList',
   Create: 'Save',

@@ -1,28 +1,16 @@
 <template>
   <a-card :bordered="false">
     <a-row :gutter="8">
-      <a-col :span="5"> </a-col>
-      <a-col :span="19">
+      <a-col :span="6">
+        <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" />
+        <a-tree :treeData="treeData" @select="onSelect"></a-tree>
+      </a-col>
+      <a-col :span="18">
         <div class="table-operations">
-          <a-button @click="OnSearch"><a-icon type="reload" />刷新</a-button>
-          <a-button><a-icon type="search" />查询</a-button>
-          <!-- <a-button><a-icon type="check-square" />全选</a-button>
-          <a-button><a-icon type="close-square" />全清</a-button> -->
-          <a-button><a-icon type="plus" />新增</a-button>
-          <a-button><a-icon type="edit" />修改</a-button>
-          <a-button><a-icon type="delete" />删除</a-button>
-          <a-button><a-icon type="copy" />复制</a-button>
-          <a-button><a-icon type="info-circle" />详情</a-button>
-          <a-button><a-icon type="check-circle" />启用</a-button>
-          <a-button><a-icon type="stop" />禁用</a-button>
-          <a-button><a-icon type="import" />导入</a-button>
-          <a-button><a-icon type="export" />导出</a-button>
-          <span style="margin-left: 8px">
-            <template v-if="hasSelected">
-              {{ `选中 ${selectedRowKeys.length} 个` }}
-            </template>
-          </span>
+          <Handle :handle="'reload,add,delete,edit'" @add="OnAdd" @edit="OnEdit" @reload="OnReload" @delete="OnDelete" />
         </div>
+        <!-- 分页 -->
+        <pagination :current="pagination.current" :total="pagination.total" @pageChange="onPaginationChange" :selRow="selectedRowKeys.length" hidden />
         <a-table
           :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
           :columns="columns"
@@ -35,15 +23,24 @@
           @change="handleTableChange"
         >
           <span slot="enable" slot-scope="enable">
-            <a-tag>{{ enable }}</a-tag>
+            <div v-if="enable">
+              <a-tag color="#87d068">启用</a-tag>
+            </div>
+            <div v-else>
+              <a-tag color="#f50">不启用</a-tag>
+            </div>
           </span>
         </a-table>
       </a-col>
     </a-row>
+    <component :is="currentComponet" :isHide="showModel" @Success="OnReload"></component>
+    <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" />
   </a-card>
 </template>
 
 <script>
+import { ACCESS_TOKEN } from '@/store/mutation-types'
+import Vue from 'vue'
 const columns = [
   {
     title: 'Id',
@@ -52,13 +49,13 @@ const columns = [
   },
   {
     title: '物料内码',
-    dataIndex: 'name',
+    dataIndex: 'fItemID',
     sorter: true,
     width: '20%'
   },
   {
     title: '物料编码',
-    dataIndex: 'name',
+    dataIndex: 'fNumber',
     sorter: true,
     width: '20%'
   },
@@ -74,11 +71,11 @@ const columns = [
     width: '10%',
     scopedSlots: { customRender: 'enable' }
   },
-  {
-    title: '模板Json',
-    dataIndex: 'template',
-    width: '20%'
-  },
+  // {
+  //   title: '模板Json',
+  //   dataIndex: 'template',
+  //   width: '20%'
+  // },
   {
     title: '操作',
     dataIndex: 'operation',
@@ -86,12 +83,23 @@ const columns = [
   }
 ]
 export default {
+  components: {
+    Handle: () => import('@/JITComponents/handle'),
+    pagination: () => import('@/JITComponents/Pagination'),
+    Edit: () => import('@/views/basic/materialsetup/Edit.vue'),
+    STree: () => import('@/components/Tree/Tree'),
+    AddOrEdit: () => import('./materialsetup/AddOrEdit')
+  },
   mounted () {
     this.OnSearch()
   },
-  name: '',
+  name: 'Materialsetup',
   data () {
     return {
+      currentComponet: '',
+      showModel: false,
+      selectedKeys: [],
+      treeData: [{ title: '物料', key: '', children: [] }],
       data: [],
       pagination: {
         current: 1,
@@ -105,15 +113,94 @@ export default {
         SkipCount: 0,
         MaxResultCount: 10,
         Sorting: ''
-      }
-    }
-  },
-  computed: {
-    hasSelected () {
-      return this.selectedRowKeys.length > 0
+      },
+      MaterialGroupGetAllParams: {
+        Data: {
+          FUNDetail: 1,
+          Top: '10000',
+          PageSize: '10000',
+          PageIndex: '1',
+          Filter: "FNumber like '%%'",
+          OrderBy: 'FNumber asc',
+          Fields: 'FNumber,FName'
+        }
+      },
+      newlist: [],
+      selectinfo: {},
+      HideIF: true
     }
   },
   methods: {
+    // s
+    OnHandle (value) {
+      value()
+    },
+    // 刷新
+    OnReload () {
+      this.HideIF = false
+      this.selectedRowKeys = []
+      this.OnTableSearch()
+      this.HideIF = true
+    },
+    // 新增
+    OnAdd () {
+      if (this.selectedKeys.length === 0) {
+        this.$message.warning('请选择物料')
+      } else {
+        this.$refs.AddOrEdit.show({ id: 0, fItemID: this.selectedKeys[0], setBookID: Vue.ls.get(ACCESS_TOKEN + 'SetBookID'), FNumber: this.selectinfo.node.value })
+      }
+      // this.currentComponet = 'Edit'
+      // this.showModel = true
+    },
+    OnEdit () {
+      if (this.selectedRowKeys.length === 0) {
+        this.$message.warning('请选择要修改的数据')
+      } else {
+        this.$refs.AddOrEdit.show({ id: this.selectedRowKeys[0] })
+      }
+    },
+    OnDelete () {
+      var _this = this
+      console.log(this.selectedRowKeys)
+      if (this.selectedRowKeys.length === 0) {
+        this.$message.warning('请选择要删除的数据')
+      } else {
+        _this.loading = true
+        _this.$store
+          .dispatch('materialTemplateDelete', { id: this.selectedRowKeys[0] })
+          .then(res => {
+            var Restult = this.$store.state.materialTemplate.deleteRestult
+            if (Restult.success) {
+              this.$message.success('删除成功')
+              this.OnReload()
+            } else {
+              this.$message.error('删除失败')
+            }
+          })
+          .finally(f => {
+            _this.loading = false
+          })
+      }
+    },
+    Close () {
+      this.currentComponet = ''
+      this.showModel = false
+    },
+    // s
+    onExpand (expandedKeys) {
+      this.expandedKeys = expandedKeys
+      this.autoExpandParent = false
+    },
+    onCheck (checkedKeys) {
+      // console.log('onCheck', checkedKeys)
+      this.checkedKeys = checkedKeys
+    },
+    onSelect (selectedKeys, info) {
+      this.selectedKeys = selectedKeys
+      this.selectinfo = info
+      this.selectedRowKeys = []
+      this.OnTableSearch()
+    },
     // 切换分页
     onPaginationChange (page, size) {
       this.pagination.current = page
@@ -127,32 +214,77 @@ export default {
     },
     handleTableChange (pagination, filters, sorter) {
       this.params.Sorting = sorter.field + ' ' + (sorter.order + '').replace('end', '')
-      console.log(sorter)
+      // console.log(sorter)
       this.OnSearch()
     },
     OnSearchParams () {
-      return this.params
+      if (this.selectedKeys.length === 0) {
+        this.$message.warning('请选择物料')
+        return {}
+      } else {
+        return {
+          FItemID: this.selectedKeys[0],
+          SetBookID: Vue.ls.get(ACCESS_TOKEN + 'SetBookID')
+        }
+      }
     },
     OnSearch () {
-      this.loading = true
-      this.$store.dispatch('materialTemplateGetAll', this.OnSearchParams()).then(res => {
-        this.data = this.$store.state.materialTemplate.List.items
-        this.pagination.total = this.$store.state.materialTemplate.List.totalCount
-      }).finally(f => {
-        this.loading = false
+      var _this = this
+      _this.loading = true
+      _this.$store
+        .dispatch('MaterialGroupGetAll', _this.MaterialGroupGetAllParams)
+        .then(res => {
+          var list = this.$store.state.MaterialGroup.List.Data
+          var t = []
+          list.forEach(item => {
+            var listd = (item.FNumber + '').lastIndexOf('.')
+            var ParentID = (item.FNumber + '').substring(0, listd)
+            t.push({
+              title: item.FNumber.replace(ParentID + '.', '') + '(' + item.FName + ')',
+              key: item.FItemID,
+              value: item.FNumber,
+              ParentID: ParentID
+            })
+          })
+          _this.newlist = t
+          // _this.treeData = [{ title: '物料', key: 0, value: '', ParentID: '', children: _this.GetTreeList('') }]
+          _this.treeData = _this.GetTreeList('')
+        })
+        .finally(f => {
+          _this.loading = false
+        })
+    },
+    OnTableSearch () {
+      var _this = this
+      _this.loading = true
+      _this.$store
+        .dispatch('materialTemplateGetByFItemID', this.OnSearchParams())
+        .then(res => {
+          this.data = this.$store.state.materialTemplate.GetByFItemIDList.result
+          this.pagination.total = this.$store.state.materialTemplate.GetByFItemIDList.length
+        })
+        .finally(f => {
+          _this.loading = false
+        })
+    },
+    GetTreeList (ParentID) {
+      var _this = this
+      var list = _this.GetChildMenuList(ParentID)
+      list.forEach(item => {
+        if (_this.GetTreeList(item.value).length > 0) {
+          item.children = _this.GetTreeList(item.value)
+        }
       })
-
-      this.loading = true
-      this.$store.dispatch('MaterialGroupGetAll', this.OnSearchParams()).then(res => {
-        this.data = this.$store.state.materialTemplate.List.items
-        this.pagination.total = this.$store.state.materialTemplate.List.totalCount
-      }).finally(f => {
-        this.loading = false
+      return list
+    },
+    GetChildMenuList (ParentID) {
+      return this.newlist.filter(f => {
+        return f.ParentID === ParentID
       })
     },
-    handleClick () {},
-    handleAdd () {},
-    handleTitleClick () {}
+    onChange () {
+      console.log(1)
+    }
   }
 }
 </script>

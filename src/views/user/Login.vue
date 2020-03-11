@@ -43,7 +43,7 @@
           </a-form-item>
           <a-form-item>
             <a-select :defaultValue="account" placeholder="请选择账套" @change="handleChange">
-              <a-select-option v-for="item in AccountList" :key="item.id" :value="item.authorityCode">
+              <a-select-option v-for="item in AccountList" :key="item.id" :value="item.authorityCode + ',' + item.id">
                 {{ item.name }}
               </a-select-option>
             </a-select>
@@ -129,6 +129,7 @@ import { timeFix } from '@/utils/util'
 import { getSmsCaptcha } from '@/api/login'
 
 export default {
+  name: 'Login',
   mounted () {
     this.OnSearch()
   },
@@ -153,6 +154,7 @@ export default {
         smsSendBtn: false
       },
       account: '',
+      SetBookID: '',
       AccountList: [],
       loading: false
     }
@@ -169,7 +171,8 @@ export default {
   },
   methods: {
     handleChange (value) {
-      this.account = value
+      this.account = value.split(',')[0]
+      this.SetBookID = value.split(',')[1]
     },
     OnSearch () {
       var _this = this
@@ -222,6 +225,7 @@ export default {
           loginParams.password = md5(values.password)
           loginParams.password = values.password
           loginParams.authorityCode = this.account
+          loginParams.SetBookID = this.SetBookID
           Login(loginParams)
             .then((res) => this.loginSuccess(res))
             .catch(err => this.requestFailed(err))
@@ -302,12 +306,21 @@ export default {
       this.isLoginError = false
     },
     requestFailed (err) {
-      this.isLoginError = true
-      this.$notification['error']({
-        message: '错误',
-        description: ((err.response || {}).data || {}).message || '请求出现错误，请稍后再试',
-        duration: 4
-      })
+      console.log(err)
+      if (err.IsSuccess === 2) {
+        this.$notification['error']({
+          message: '错误',
+          description: err.message,
+          duration: 4
+        })
+      } else {
+        this.isLoginError = true
+        this.$notification['error']({
+          message: '错误',
+          description: ((err.response || {}).data || {}).message || '请求出现错误，请稍后再试',
+          duration: 4
+        })
+      }
     }
   }
 }

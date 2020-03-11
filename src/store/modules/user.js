@@ -10,7 +10,8 @@ const user = {
     welcome: '',
     avatar: '',
     roles: [],
-    info: {}
+    info: {},
+    K3loginstate: {}
   },
 
   mutations: {
@@ -29,6 +30,9 @@ const user = {
     },
     SET_INFO: (state, info) => {
       state.info = info
+    },
+    SET_K3LOGINSTATE: (state, K3loginstate) => {
+      state.K3loginstate = K3loginstate
     }
   },
 
@@ -36,15 +40,31 @@ const user = {
     // 登录
     Login ({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
-        login(userInfo).then(response => {
-          const result = response.result
-          loginK3({ authorityCode: userInfo.authorityCode }).then(res => {
-            Vue.ls.set(ACCESS_TOKEN + 'K3', res.Data.Token, 7 * 24 * 60 * 60 * 1000)
-            console.log(res)
-          })
-          Vue.ls.set(ACCESS_TOKEN, result.accessToken, 7 * 24 * 60 * 60 * 1000)
-          commit('SET_TOKEN', result.accessToken)
-          resolve()
+        login(userInfo).then(res => {
+          var obj = { IsSuccess: 0, message: '' }
+          const result = res.result
+          if (result === null) {
+            obj.IsSuccess = 1
+            obj.message = res.errot.details
+            reject(obj)
+          } else {
+            Vue.ls.set(ACCESS_TOKEN, result.accessToken, 7 * 24 * 60 * 60 * 1000)
+            commit('SET_TOKEN', result.accessToken)
+            commit('SET_AVATAR', '/avatar2.jpg')
+            loginK3({ authorityCode: userInfo.authorityCode }).then(res => {
+              console.log('loginK3' + JSON.stringify(res))
+              if (res.Data === null) {
+                obj.message = res.Message
+                obj.IsSuccess = 2
+                reject(obj)
+              } else {
+                Vue.ls.set(ACCESS_TOKEN + 'SetBookID', userInfo.SetBookID, 7 * 24 * 60 * 60 * 1000)
+                Vue.ls.set(ACCESS_TOKEN + 'K3', res.Data.Token, 7 * 24 * 60 * 60 * 1000)
+                commit('SET_K3LOGINSTATE', result.Data)
+                resolve(obj)
+              }
+            })
+          }
         }).catch(error => {
           reject(error)
         })
@@ -106,6 +126,7 @@ const user = {
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])
           Vue.ls.remove(ACCESS_TOKEN)
+          Vue.ls.remove(ACCESS_TOKEN + 'K3')
         })
       })
     }

@@ -1,12 +1,11 @@
-import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/materialTemplate'
+import { Get, GetAll, Save, Delete } from '@/api/K3/Stock'
 
-const materialTemplate = {
+const Stock = {
   state: {
     List: [],
     Detailed: {},
     saveRestult: {},
-    deleteRestult: {},
-    GetByFItemIDList: []
+    deleteRestult: {}
   },
   mutations: {
     SET_LIST: (state, List) => {
@@ -14,9 +13,6 @@ const materialTemplate = {
     },
     SET_DETAILED: (state, Detailed) => {
       state.Detailed = Detailed
-    },
-    SET_GETBYFITEMIDLIST: (state, GetByFItemIDList) => {
-      state.GetByFItemIDList = GetByFItemIDList
     },
     SET_SAVE: (state, saveRestult) => {
       state.saveRestult = saveRestult
@@ -27,25 +23,13 @@ const materialTemplate = {
   },
 
   actions: {
-    materialTemplateGetByFItemID ({ commit }, parame) {
-      return new Promise((resolve, reject) => {
-        GetByFItemID(parame)
-          .then(response => {
-            commit('SET_GETBYFITEMIDLIST', response)
-            resolve()
-          })
-          .catch(error => {
-            reject(error)
-          })
-      })
-    },
     // 获取明细
-    materialTemplateGet ({ commit }, parame) {
+    StockGet ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Get(parame)
           .then(response => {
             commit('SET_DETAILED', response)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -53,13 +37,12 @@ const materialTemplate = {
       })
     },
     // 获取列表
-    materialTemplateGetAll ({ commit }, parame) {
+    StockGetAll ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         GetAll(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_LIST', result)
-            resolve()
+            commit('SET_LIST', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -67,12 +50,12 @@ const materialTemplate = {
       })
     },
     // 保存数据
-    materialTemplateSave ({ commit }, parame) {
+    StockSave ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Save(parame)
           .then(response => {
             commit('SET_SAVE', response)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -80,13 +63,12 @@ const materialTemplate = {
       })
     },
     // 删除数据
-    materialTemplateDelete ({ commit }, parame) {
+    StockDelete ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
-            const result = response
-            commit('SET_DELETE', result)
-            resolve()
+            commit('SET_DELETE', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -96,4 +78,4 @@ const materialTemplate = {
   }
 }
 
-export default materialTemplate
+export default Stock

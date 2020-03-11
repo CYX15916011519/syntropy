@@ -5,7 +5,7 @@ const K3ApiUrl = {
     connectList: [],
     connectDetailed: {},
     saveRestult: {},
-    deleteRestult: {}
+    deleteRestult: false
   },
   mutations: {
     SET_LIST: (state, connectList) => {
@@ -28,8 +28,7 @@ const K3ApiUrl = {
       return new Promise((resolve, reject) => {
         Get(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_DETAILED', result.result)
+            commit('SET_DETAILED', response)
             resolve()
           })
           .catch(error => {
@@ -56,8 +55,7 @@ const K3ApiUrl = {
       return new Promise((resolve, reject) => {
         Save(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_SAVE', result.result)
+            commit('SET_SAVE', response)
             resolve()
           })
           .catch(error => {
@@ -70,8 +68,7 @@ const K3ApiUrl = {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_DELETE', result.result)
+            commit('SET_DELETE', response)
             resolve()
           })
           .catch(error => {

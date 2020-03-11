@@ -1,6 +1,6 @@
-import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/materialTemplate'
+import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/ABP/LocalMaterialMapCustomMaterial'
 
-const materialTemplate = {
+const LocalMaterialMapCustomMaterial = {
   state: {
     List: [],
     Detailed: {},
@@ -27,12 +27,12 @@ const materialTemplate = {
   },
 
   actions: {
-    materialTemplateGetByFItemID ({ commit }, parame) {
+    LocalMaterialMapCustomMaterialGetByFItemID ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         GetByFItemID(parame)
           .then(response => {
             commit('SET_GETBYFITEMIDLIST', response)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -40,12 +40,12 @@ const materialTemplate = {
       })
     },
     // 获取明细
-    materialTemplateGet ({ commit }, parame) {
+    LocalMaterialMapCustomMaterialGet ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Get(parame)
           .then(response => {
             commit('SET_DETAILED', response)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -53,13 +53,13 @@ const materialTemplate = {
       })
     },
     // 获取列表
-    materialTemplateGetAll ({ commit }, parame) {
+    LocalMaterialMapCustomMaterialGetAll ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         GetAll(parame)
           .then(response => {
             const result = response.result
             commit('SET_LIST', result)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -67,12 +67,12 @@ const materialTemplate = {
       })
     },
     // 保存数据
-    materialTemplateSave ({ commit }, parame) {
+    LocalMaterialMapCustomMaterialSave ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Save(parame)
           .then(response => {
             commit('SET_SAVE', response)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -80,13 +80,13 @@ const materialTemplate = {
       })
     },
     // 删除数据
-    materialTemplateDelete ({ commit }, parame) {
+    LocalMaterialMapCustomMaterialDelete ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
             const result = response
             commit('SET_DELETE', result)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -96,4 +96,4 @@ const materialTemplate = {
   }
 }
 
-export default materialTemplate
+export default LocalMaterialMapCustomMaterial

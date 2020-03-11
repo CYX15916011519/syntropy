@@ -17,7 +17,10 @@ if (url.indexOf('http://192.168') >= 0 || url.indexOf('localhost') >= 0) {
 const service = axios.create({
   // baseURL: process.env.VUE_APP_API_BASE_URL, // api base_url
   baseURL: baseURL,
-  timeout: 6000 // 请求超时时间
+  timeout: 6000,
+  headers: {
+    'Content-Type': 'application/json;'
+  }
 })
 
 const err = (error) => {

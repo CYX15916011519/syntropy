@@ -2,17 +2,17 @@ import { Get, GetAll, Save, Delete } from '@/api/K3/MaterialGroup'
 
 const MaterialGroup = {
   state: {
-    connectList: [],
-    connectDetailed: {},
+    List: [],
+    Detailed: {},
     saveRestult: {},
     deleteRestult: {}
   },
   mutations: {
-    SET_LIST: (state, connectList) => {
-      state.connectList = connectList
+    SET_LIST: (state, List) => {
+      state.List = List
     },
-    SET_DETAILED: (state, connectDetailed) => {
-      state.connectDetailed = connectDetailed
+    SET_DETAILED: (state, Detailed) => {
+      state.Detailed = Detailed
     },
     SET_SAVE: (state, saveRestult) => {
       state.saveRestult = saveRestult
@@ -28,8 +28,8 @@ const MaterialGroup = {
       return new Promise((resolve, reject) => {
         Get(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_DETAILED', result.result)
+            const result = response.Data
+            commit('SET_DETAILED', result)
             resolve()
           })
           .catch(error => {
@@ -42,7 +42,8 @@ const MaterialGroup = {
       return new Promise((resolve, reject) => {
         GetAll(parame)
           .then(response => {
-            const result = response.result
+            // console.log(response)
+            const result = response.Data
             commit('SET_LIST', result)
             resolve()
           })
@@ -56,8 +57,8 @@ const MaterialGroup = {
       return new Promise((resolve, reject) => {
         Save(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_SAVE', result.result)
+            const result = response.Data
+            commit('SET_SAVE', result)
             resolve()
           })
           .catch(error => {
@@ -70,8 +71,8 @@ const MaterialGroup = {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
-            const result = response.result
-            commit('SET_DELETE', result.result)
+            const result = response.Data
+            commit('SET_DELETE', result)
             resolve()
           })
           .catch(error => {
