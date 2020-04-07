@@ -6,11 +6,11 @@ if (url.indexOf('localhost') >= 0) {
   baseURL = 'http://139.9.6.165:800'
 } 
 else if (url.indexOf('http://192.168') >= 0) {
-  baseURL = 'http://192.168.10.2:800'
+  baseURL = 'http://192.168.10.2:80'
 }
 else {
   // 正式环境
-  baseURL = 'http://192.168.10.2:800'
+  baseURL = 'http://192.168.10.2:80'
 }
 
 const api = {
