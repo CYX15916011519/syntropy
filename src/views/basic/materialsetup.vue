@@ -12,10 +12,10 @@
         <!-- 分页 -->
         <pagination :current="pagination.current" :total="pagination.total" @pageChange="onPaginationChange" :selRow="selectedRowKeys.length" hidden />
         <a-table
+          rowKey="wl"
           :size="'small'"
           :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
           :columns="columns"
-          :rowKey="record => record.id"
           :dataSource="data"
           :pagination="false"
           :loading="loading"
@@ -34,8 +34,8 @@
         </a-table>
       </a-col>
     </a-row>
-    <component :is="currentComponet" :isHide="showModel" @Success="OnReload"></component>
-    <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" />
+    <!-- <component :is="currentComponet" :isHide="showModel" @Success="OnReload"></component> -->
+    <!-- <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" /> -->
   </a-card>
 </template>
 
@@ -124,9 +124,9 @@ export default {
       MaterialGroupGetAllParams: {
         Data: {
           FUNDetail: 1,
-          Top: '10000',
-          PageSize: '10000',
-          PageIndex: '1',
+          Top: '0',
+          PageSize: 100,
+          PageIndex: 1,
           Filter: "FNumber like '%%'",
           OrderBy: 'FNumber asc',
           Fields: 'FNumber,FName'
@@ -249,23 +249,27 @@ export default {
             list = []
             return
           }
-          var t = []
           list.forEach(item => {
             var listd = (item.FNumber + '').lastIndexOf('.')
             var ParentID = (item.FNumber + '').substring(0, listd)
-            t.push({
+            _this.newlist.push({
               title: item.FNumber.replace(ParentID + '.', '') + '(' + item.FName + ')',
               key: item.FItemID,
               value: item.FNumber,
               ParentID: ParentID
             })
           })
-          _this.newlist = t
-          // _this.treeData = [{ title: '物料', key: 0, value: '', ParentID: '', children: _this.GetTreeList('') }]
-          _this.treeData = _this.GetTreeList('')
+          
         })
         .finally(f => {
           _this.loading = false
+          if (_this.$store.state.MaterialGroup.List.RowCount > _this.newlist.length) {
+            _this.MaterialGroupGetAllParams.Data.PageIndex = _this.MaterialGroupGetAllParams.Data.PageIndex * 1 + 1
+            _this.OnSearch()
+          } else {
+            // _this.treeData = [{ title: '物料', key: 0, value: '', ParentID: '', children: _this.GetTreeList('') }]
+            _this.treeData = _this.GetTreeList('')
+          }
         })
     },
     OnTableSearch () {

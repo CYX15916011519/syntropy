@@ -1,11 +1,11 @@
 <template>
   <a-card :bordered="false">
     <a-row :gutter="8">
-      <a-col :span="4">
+      <a-col :span="6">
         <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" v-if="false" />
         <a-tree :treeData="GettreeData" @select="onSelect"></a-tree>
       </a-col>
-      <a-col :span="20">
+      <a-col :span="18">
         <div class="table-operations">
           <Handle
             :handle="'reload,add,delete,edit,import'"
@@ -62,7 +62,7 @@ const columns = [
   // },
   {
     title: 'K3物料编码',
-    dataIndex: 'FMeterialId',
+    dataIndex: 'FMeterialCode_FNDName',
     sorter: true,
     width: '20%'
   },
@@ -94,7 +94,7 @@ export default {
     Import: () => import('./codemanage2/Import')
   },
   mounted () {
-    this.GetWL()
+    // this.GetWL()
     this.OnSearch()
   },
   name: 'Codemanage2',
@@ -123,28 +123,6 @@ export default {
         SkipCount: 0,
         MaxResultCount: 10,
         Sorting: ''
-      },
-      MaterialGroupGetAllParams: {
-        Data: {
-          FUNDetail: 1,
-          Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName'
-        }
-      },
-      MaterialGroupGetAllParams2: {
-        Data: {
-          FUNDetail: 0,
-          Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName'
-        }
       },
       newlist: []
     }
@@ -272,14 +250,14 @@ export default {
       _this.$store
         .dispatch('Bill1000200GetAll', params)
         .then(res => {
-          res.Data.DATA.forEach(f => {
-            var list = _this.newlist.filter(a => { return a.FItemID * 1 === f.FMeterialCode * 1 })
-            // console.log(f.FMeterialCode)
-            if (list.length > 0) {
-              // console.log(list)
-              f.FMeterialId = list[0].FNumber
-            }
-          })
+          // res.Data.DATA.forEach(f => {
+          //   var list = _this.newlist.filter(a => { return a.FItemID * 1 === f.FMeterialCode * 1 })
+          //   // console.log(f.FMeterialCode)
+          //   if (list.length > 0) {
+          //     // console.log(list)
+          //     f.FMeterialId = list[0].FNumber
+          //   }
+          // })
           this.data = res.Data.DATA
           this.pagination.total = res.Data.DATA.length
         })
@@ -308,7 +286,6 @@ export default {
     },
     onChange (e) {
       const value = e.target.value
-      console.log(value)
     },
     GetWL () {
       var _this = this
