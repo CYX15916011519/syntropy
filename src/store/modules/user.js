@@ -1,7 +1,8 @@
 import Vue from 'vue'
-import { login, getInfo, logout, getCurrentLoginInformations, loginK3 } from '@/api/login'
+import { login, getInfo, logout, getCurrentLoginInformations } from '@/api/login'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 import { welcome } from '@/utils/util'
+import store from '@/store'
 // import { constantRouterMap } from '@/config/router.config'
 const user = {
   state: {
@@ -48,22 +49,23 @@ const user = {
             obj.message = res.errot.details
             reject(obj)
           } else {
-            Vue.ls.set(ACCESS_TOKEN, result.accessToken, 7 * 24 * 60 * 60 * 1000)
+            var Validity = 7 * 24 * 60 * 60 * 1000
+            Vue.ls.set(ACCESS_TOKEN, result.accessToken, Validity)
             commit('SET_TOKEN', result.accessToken)
             commit('SET_AVATAR', '/avatar2.jpg')
-            loginK3({ authorityCode: userInfo.authorityCode }).then(res => {
-              console.log('loginK3' + JSON.stringify(res))
-              if (res.Data === null) {
-                obj.message = res.Message
-                obj.IsSuccess = 2
-                reject(obj)
-              } else {
-                Vue.ls.set(ACCESS_TOKEN + 'SetBookID', userInfo.SetBookID, 7 * 24 * 60 * 60 * 1000)
-                Vue.ls.set(ACCESS_TOKEN + 'K3', res.Data.Token, 7 * 24 * 60 * 60 * 1000)
-                commit('SET_K3LOGINSTATE', result.Data)
-                resolve(obj)
-              }
-            })
+            Vue.ls.set(ACCESS_TOKEN + 'authorityCode', userInfo.authorityCode, Validity)
+            Vue.ls.set(ACCESS_TOKEN + 'SetBookID', userInfo.SetBookID, Validity)
+            store
+              .dispatch('TokenGet')
+              .then(res => {
+                if (res.Data === null) {
+                  obj.message = res.Message
+                  obj.IsSuccess = 2
+                  reject(obj)
+                } else {
+                  resolve(obj)
+                }
+              })
           }
         }).catch(error => {
           reject(error)

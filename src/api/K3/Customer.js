@@ -50,8 +50,8 @@ export function Delete (parameter) {
 export function GetByFItemID (parameter) {
   return axios({
     url: api.BaseUrl + api.GetByFItemID,
-    method: 'get',
-    params: parameter
+    method: 'post',
+    data: parameter
   })
 }
 

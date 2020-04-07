@@ -47,12 +47,7 @@ const columns = [
   {
     title: '备注',
     dataIndex: 'remark',
-    width: '20%'
-  },
-  {
-    title: '操作',
-    dataIndex: 'operation',
-    width: '20%'
+    width: '60%'
   }
 ]
 export default {
@@ -104,7 +99,7 @@ export default {
       var _this = this
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要删除的数据')
-      } else {
+      } else if (this.selectedRowKeys.length === 1) {
         _this.loading = true
         _this.$store
           .dispatch('connectDelete', { id: this.selectedRowKeys[0] })
@@ -120,6 +115,8 @@ export default {
           .finally(f => {
             _this.loading = false
           })
+      } else {
+        this.$message.warning('请选择1条要删除的数据')
       }
     },
     // 切换分页

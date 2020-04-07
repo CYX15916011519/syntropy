@@ -1,6 +1,6 @@
-import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/K3/Material'
+import { Get, GetAll, Save, Delete } from '@/api/K3/SubMessage'
 
-const Material = {
+const SubMessage = {
   state: {
     List: [],
     Detailed: {},
@@ -19,49 +19,30 @@ const Material = {
     },
     SET_DELETE: (state, deleteRestult) => {
       state.deleteRestult = deleteRestult
-    },
-    SET_DETAILEDITEM: (state, DetailedItem) => {
-      state.DetailedItem = DetailedItem
     }
   },
 
   actions: {
     // 获取明细
-    MaterialGet ({ commit }, parame) {
+    SubMessageGet ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Get(parame)
           .then(response => {
-            const result = response.Data
-            commit('SET_DETAILED', result)
-            resolve(result)
+            commit('SET_DETAILED', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
           })
       })
     },
-    async MaterialGetByFItemID ({ commit }, parame) {
-     const ml = await GetByFItemID(parame)
-          .then(response => {
-            commit('SET_DETAILEDITEM', response)
-            // resolve(response)
-            return response
-          })
-          .catch(error => {
-            return error
-            // reject(error)
-          })
-          return ml
-    },
     // 获取列表
-    MaterialGetAll ({ commit }, parame) {
+    SubMessageGetAll ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         GetAll(parame)
           .then(response => {
-            // console.log(response)
-            const result = response.Data
-            commit('SET_LIST', result)
-            resolve()
+            commit('SET_LIST', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -69,9 +50,9 @@ const Material = {
       })
     },
     // 保存数据
-    MaterialSave ({ commit }, parame) {
-      return new Promise(async (resolve, reject) => {
-        await Save(parame)
+    SubMessageSave ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        Save(parame)
           .then(response => {
             commit('SET_SAVE', response)
             resolve(response)
@@ -82,13 +63,12 @@ const Material = {
       })
     },
     // 删除数据
-    MaterialDelete ({ commit }, parame) {
+    SubMessageDelete ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
-            const result = response.Data
-            commit('SET_DELETE', result)
-            resolve(result)
+            commit('SET_DELETE', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -98,4 +78,4 @@ const Material = {
   }
 }
 
-export default Material
+export default SubMessage

@@ -2,8 +2,8 @@
   <a-card :bordered="false">
     <a-row :gutter="8">
       <a-col :span="6">
-        <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" />
-        <a-tree :treeData="treeData" @select="onSelect"></a-tree>
+        <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" v-if="false" />
+        <a-tree :defaultExpandAll="defaultExpandAll" :treeData="GettreeData" @select="onSelect"></a-tree>
       </a-col>
       <a-col :span="18">
         <div class="table-operations">
@@ -12,6 +12,7 @@
         <!-- 分页 -->
         <pagination :current="pagination.current" :total="pagination.total" @pageChange="onPaginationChange" :selRow="selectedRowKeys.length" hidden />
         <a-table
+          :size="'small'"
           :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
           :columns="columns"
           :rowKey="record => record.id"
@@ -57,30 +58,30 @@ const columns = [
     title: '物料编码',
     dataIndex: 'fNumber',
     sorter: true,
-    width: '20%'
+    width: '30%'
   },
   {
     title: '模板名称',
     dataIndex: 'name',
     sorter: true,
-    width: '20%'
+    width: '30%'
   },
   {
     title: '是否启用',
     dataIndex: 'enable',
     width: '10%',
     scopedSlots: { customRender: 'enable' }
-  },
+  }
   // {
   //   title: '模板Json',
   //   dataIndex: 'template',
   //   width: '20%'
   // },
-  {
-    title: '操作',
-    dataIndex: 'operation',
-    width: '10%'
-  }
+  // {
+  //   title: '操作',
+  //   dataIndex: 'operation',
+  //   width: '10%'
+  // }
 ]
 export default {
   components: {
@@ -94,8 +95,14 @@ export default {
     this.OnSearch()
   },
   name: 'Materialsetup',
+  computed: {
+    GettreeData () {
+      return this.treeData
+    }
+  },
   data () {
     return {
+      defaultExpandAll: true,
       currentComponet: '',
       showModel: false,
       selectedKeys: [],
@@ -127,7 +134,8 @@ export default {
       },
       newlist: [],
       selectinfo: {},
-      HideIF: true
+      HideIF: true,
+      SelectText: ''
     }
   },
   methods: {
@@ -164,7 +172,7 @@ export default {
       console.log(this.selectedRowKeys)
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要删除的数据')
-      } else {
+      } else if (this.selectedRowKeys.length === 1) {
         _this.loading = true
         _this.$store
           .dispatch('materialTemplateDelete', { id: this.selectedRowKeys[0] })
@@ -180,6 +188,8 @@ export default {
           .finally(f => {
             _this.loading = false
           })
+      } else {
+        this.$message.warning('请选择1条要删除的数据')
       }
     },
     Close () {
@@ -235,6 +245,10 @@ export default {
         .dispatch('MaterialGroupGetAll', _this.MaterialGroupGetAllParams)
         .then(res => {
           var list = this.$store.state.MaterialGroup.List.Data
+          if (list === undefined) {
+            list = []
+            return
+          }
           var t = []
           list.forEach(item => {
             var listd = (item.FNumber + '').lastIndexOf('.')
@@ -282,8 +296,8 @@ export default {
         return f.ParentID === ParentID
       })
     },
-    onChange () {
-      console.log(1)
+    onChange (e) {
+      this.SelectText = e.target.value
     }
   }
 }

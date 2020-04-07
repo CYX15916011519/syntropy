@@ -1,11 +1,12 @@
-import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/K3/Material'
+import { Get, GetAll, Save, Delete, Check } from '@/api/ABP/BomImport'
 
-const Material = {
+const BomImport = {
   state: {
     List: [],
     Detailed: {},
     saveRestult: {},
-    deleteRestult: {}
+    deleteRestult: {},
+    checkRestult: {}
   },
   mutations: {
     SET_LIST: (state, List) => {
@@ -20,48 +21,45 @@ const Material = {
     SET_DELETE: (state, deleteRestult) => {
       state.deleteRestult = deleteRestult
     },
-    SET_DETAILEDITEM: (state, DetailedItem) => {
-      state.DetailedItem = DetailedItem
+    SET_CHECK: (state, checkRestult) => {
+      state.checkRestult = checkRestult
     }
   },
 
   actions: {
-    // 获取明细
-    MaterialGet ({ commit }, parame) {
+    BomImportCheck ({ commit }, obj) {
+      // console.log(obj)
       return new Promise((resolve, reject) => {
-        Get(parame)
+        Check(obj)
           .then(response => {
-            const result = response.Data
-            commit('SET_DETAILED', result)
-            resolve(result)
+            commit('SET_CHECK', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
           })
       })
     },
-    async MaterialGetByFItemID ({ commit }, parame) {
-     const ml = await GetByFItemID(parame)
+    // 获取明细
+    BomImportGet ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        Get(parame)
           .then(response => {
-            commit('SET_DETAILEDITEM', response)
-            // resolve(response)
-            return response
+            commit('SET_DETAILED', response)
+            resolve(response)
           })
           .catch(error => {
-            return error
-            // reject(error)
+            reject(error)
           })
-          return ml
+      })
     },
     // 获取列表
-    MaterialGetAll ({ commit }, parame) {
+    BomImportGetAll ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         GetAll(parame)
           .then(response => {
-            // console.log(response)
-            const result = response.Data
-            commit('SET_LIST', result)
-            resolve()
+            commit('SET_LIST', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -69,9 +67,9 @@ const Material = {
       })
     },
     // 保存数据
-    MaterialSave ({ commit }, parame) {
-      return new Promise(async (resolve, reject) => {
-        await Save(parame)
+    BomImportSave ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        Save(parame)
           .then(response => {
             commit('SET_SAVE', response)
             resolve(response)
@@ -82,13 +80,12 @@ const Material = {
       })
     },
     // 删除数据
-    MaterialDelete ({ commit }, parame) {
+    BomImportDelete ({ commit }, parame) {
       return new Promise((resolve, reject) => {
         Delete(parame)
           .then(response => {
-            const result = response.Data
-            commit('SET_DELETE', result)
-            resolve(result)
+            commit('SET_DELETE', response)
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -98,4 +95,4 @@ const Material = {
   }
 }
 
-export default Material
+export default BomImport

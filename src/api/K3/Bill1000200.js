@@ -1,7 +1,7 @@
 import { axiosk3 as axios } from '@/utils/K3Api'
 
 const api = {
-  BaseUrl: '/K3API/Account/',
+  BaseUrl: '/K3API/Bill1000200/',
   Get: 'GetTemplate',
   GetAll: 'GetList',
   Create: 'Save',
@@ -33,8 +33,16 @@ export function GetAll (parameter) {
 // id != 0 update  put
 export function Save (parameter) {
   return axios({
-    url: api.BaseUrl + (parameter.id === 0 ? api.Create : api.Update),
-    method: parameter.id === 0 ? 'post' : 'put',
+    url: api.BaseUrl + api.Create,
+    method: 'post',
+    data: parameter
+  })
+}
+
+export function Save2 (parameter) {
+  return axios({
+    url: api.BaseUrl + api.Update,
+    method: 'post',
     data: parameter
   })
 }
@@ -42,16 +50,16 @@ export function Save (parameter) {
 export function Delete (parameter) {
   return axios({
     url: api.BaseUrl + api.Delete,
-    method: 'delete',
-    params: parameter
+    method: 'post',
+    data: parameter
   })
 }
 
 export function GetByFItemID (parameter) {
   return axios({
     url: api.BaseUrl + api.GetByFItemID,
-    method: 'get',
-    params: parameter
+    method: 'post',
+    data: parameter
   })
 }
 

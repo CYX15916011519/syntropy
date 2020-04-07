@@ -1,4 +1,4 @@
-import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/ABP/LocalMaterialMapCustomMaterial'
+import { Get, GetAll, Save, Delete, GetByFItemID, GetByFItemID2 } from '@/api/ABP/LocalMaterialMapCustomMaterial'
 
 const LocalMaterialMapCustomMaterial = {
   state: {
@@ -6,7 +6,8 @@ const LocalMaterialMapCustomMaterial = {
     Detailed: {},
     saveRestult: {},
     deleteRestult: {},
-    GetByFItemIDList: []
+    GetByFItemIDList: [],
+    GetByFItemID2List: {}
   },
   mutations: {
     SET_LIST: (state, List) => {
@@ -17,6 +18,9 @@ const LocalMaterialMapCustomMaterial = {
     },
     SET_GETBYFITEMIDLIST: (state, GetByFItemIDList) => {
       state.GetByFItemIDList = GetByFItemIDList
+    },
+    SET_GETBYFITEMIDLIST2: (state, GetByFItemIDList2) => {
+      state.GetByFItemID2List = GetByFItemIDList2
     },
     SET_SAVE: (state, saveRestult) => {
       state.saveRestult = saveRestult
@@ -32,6 +36,18 @@ const LocalMaterialMapCustomMaterial = {
         GetByFItemID(parame)
           .then(response => {
             commit('SET_GETBYFITEMIDLIST', response)
+            resolve(response)
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
+    GetByLocalItemCustomIDGetByFItemID ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        GetByFItemID2(parame)
+          .then(response => {
+            commit('SET_GETBYFITEMIDLIST2', response)
             resolve(response)
           })
           .catch(error => {

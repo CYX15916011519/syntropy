@@ -16,6 +16,8 @@ import K3ApiUrl from './modules/connect'
 import materialTemplate from './modules/materialTemplate'
 // -- ABP
 import LocalMaterialMapCustomMaterial from './ABP/LocalMaterialMapCustomMaterial'
+import BomImport from './ABP/BomImport'
+import JITCommon from './ABP/JITCommon'
 // -- K3
 import MaterialGroup from './K3/MaterialGroup'
 import Material from './K3/Material'
@@ -31,6 +33,11 @@ import Currency from './K3/Currency'
 import BaseAuxPropClass from './K3/BaseAuxPropClass'
 import ItemClass2003 from './K3/ItemClass2003'
 import Routing from './K3/Routing'
+import Token from './K3/Token'
+import BOM from './K3/BOM'
+import SubMessage from './K3/SubMessage'
+import SQLReport from './K3/SQLReport'
+import Bill1000200 from './K3/Bill1000200'
 
 Vue.use(Vuex)
 
@@ -56,8 +63,15 @@ export default new Vuex.Store({
     BaseAuxPropClass,
     ItemClass2003,
     Routing,
+    Token,
+    BOM,
+    SubMessage,
+    SQLReport,
+    Bill1000200,
     // ABP
-    LocalMaterialMapCustomMaterial
+    LocalMaterialMapCustomMaterial,
+    BomImport,
+    JITCommon
   },
   state: {
     // K3ApiUrl: K3ApiUrl.state

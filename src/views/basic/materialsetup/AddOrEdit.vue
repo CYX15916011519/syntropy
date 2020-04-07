@@ -1,18 +1,18 @@
 <!--页面代码-->
 <template>
-  <a-spin tip="保存中，请稍等..." :spinning="spinning">
-    <a-modal
-      :title="title"
-      :visible="visible"
-      :maskClosable="false"
-      @ok="handleOk"
-      @cancel="handleCancel"
-      width="55%"
-      style="max-height:70%;"
-      :bodyStyle="{ height: '-webkit-fill-available',overflow: 'auto' }"
-    >
+  <a-modal
+    :title="title"
+    :visible="visible"
+    :maskClosable="false"
+    @ok="handleOk"
+    @cancel="handleCancel"
+    width="55%"
+    style="max-height:70%;"
+    :bodyStyle="{ height: '-webkit-fill-available', overflow: 'auto' }"
+  >
+    <a-spin tip="保存中，请稍等..." :spinning="spinning">
       <a-form :form="form" @submit="handleSubmit" :layout="formLayout">
-        <a-tabs :defaultActiveKey="1" :tabBarStyle="{ height: '50%',overflow: 'auto' }">
+        <a-tabs :defaultActiveKey="1" :tabBarStyle="{ height: '50%', overflow: 'auto' }">
           <a-tab-pane :tab="'基本信息'" :key="1">
             <a-form-item
               label="* 模板名称："
@@ -37,7 +37,11 @@
             </a-form-item>
           </a-tab-pane>
           <!-- 选项卡 -->
-          <a-tab-pane v-for="tmp in Object.keys(GetNewFormGroup)" :tab="GetNewFormGroup[tmp].name" :key="GetNewFormGroup[tmp].key">
+          <a-tab-pane
+            v-for="tmp in Object.keys(GetNewFormGroup)"
+            :tab="GetNewFormGroup[tmp].name"
+            :key="GetNewFormGroup[tmp].key"
+          >
             <a-form-item
               v-for="item in GetNewFormGroup[tmp].List"
               :key="item.id"
@@ -45,17 +49,45 @@
               :label-col="formItemLayout.labelCol"
               :wrapper-col="formItemLayout.wrapperCol"
             >
-              <a-input-number v-if="((item.type.trim() === 'float' || item.type.trim() === 'none' || item.type.trim() === 'int') && typeof JsonForm[item.id] !== 'object')" :placeholder="'请输入' + item.id.trim()" style="width: 100%" v-model="JsonForm[item.id]" />
-              <a-input :placeholder="'请输入' + item.id.trim()" v-if="item.type.trim() === 'varchar'" v-model="JsonForm[item.id]" :defaultValue="JsonForm[item.id]" />
+              <a-input-number
+                v-if="
+                  (item.type.trim() === 'float' || item.type.trim() === 'none' || item.type.trim() === 'int') &&
+                    typeof JsonForm[item.id] !== 'object'
+                "
+                :placeholder="'请输入' + item.id.trim()"
+                style="width: 100%"
+                v-model="JsonForm[item.id]"
+              />
+              <a-input
+                :placeholder="'请输入' + item.id.trim()"
+                v-if="item.type.trim() === 'varchar'"
+                v-model="JsonForm[item.id]"
+                :defaultValue="JsonForm[item.id]"
+              />
               <a-checkbox v-if="item.type.trim() === 'bit'" v-model="JsonForm[item.id]"></a-checkbox>
               <a-date-picker v-if="item.type.trim() === 'datetime'" style="width: 100%" v-model="JsonForm[item.id]" />
-              <a-select showSearch v-if="(item.api !== undefined || item.List !== undefined) && item.id !== 'FUnitGroupID'" :placeholder="'请选择' + item.id" @change="value => OnChangSel(value, item)" :defaultValue="OnGetSel(item)">
-                <a-select-option v-for="(apitmp) in GetApiData[item.id]" :key="apitmp.FName + '-' + apitmp.FNumber">
+              <a-select
+                showSearch
+                v-if="(item.api !== undefined || item.List !== undefined) && item.id !== 'FUnitGroupID'"
+                :placeholder="'请选择' + item.id"
+                @change="value => OnChangSel(value, item)"
+                :defaultValue="OnGetSel(item)"
+              >
+                <a-select-option v-for="apitmp in GetApiData[item.id]" :key="apitmp.FName + '-' + apitmp.FNumber">
                   {{ apitmp.FNumber + ' - ' + apitmp.FName }}
                 </a-select-option>
               </a-select>
-              <a-select showSearch v-if="item.id === 'FUnitGroupID'" :placeholder="'请选择' + item.name" @change="value => OnChangSel(value, item)" :defaultValue="OnGetSel(item)">
-                <a-select-option v-for="(apitmp) in GetApiData[item.id]" :key="apitmp.FName + '-' + apitmp.FDefaultUnitID">
+              <a-select
+                showSearch
+                v-if="item.id === 'FUnitGroupID'"
+                :placeholder="'请选择' + item.name"
+                @change="value => OnChangSel(value, item)"
+                :defaultValue="OnGetSel(item)"
+              >
+                <a-select-option
+                  v-for="apitmp in GetApiData[item.id]"
+                  :key="apitmp.FName + '-' + apitmp.FDefaultUnitID"
+                >
                   {{ apitmp.FDefaultUnitID + ' - ' + apitmp.FName }}
                 </a-select-option>
               </a-select>
@@ -63,8 +95,8 @@
           </a-tab-pane>
         </a-tabs>
       </a-form>
-    </a-modal>
-  </a-spin>
+    </a-spin>
+  </a-modal>
 </template>
 <!--脚本文件-->
 <script>
@@ -216,11 +248,12 @@ export default {
     },
     // 提交
     handleSubmit (obj) {
+      this.ShowLoad()
       if (this.Oncheck()) {
+        this.HideLoad()
         return
       }
       var _this = this
-      _this.ShowLoad()
       _this.form.template = JSON.stringify(this.JsonForm)
       _this.$store
         .dispatch('materialTemplateSave', _this.form)
@@ -288,8 +321,45 @@ export default {
     OnChangSel (value, item) {
       // console.log(this.JsonForm[item.id])
       console.log(value)
+      if (item.id === 'FTrack') {
+        this.JsonForm[item.id].FID = (value + '').split('-')[1]
+      }
+      if (item.id === 'FUnitGroupID') {
+        this.againSetUnit((value + '').split('-')[1])
+      }
+      if (item.id === 'FErpClsID') {
+        this.JsonForm[item.id]['FID'] = (value + '').split('-')[1]
+      }
       this.JsonForm[item.id].FName = (value + '').split('-')[0]
       this.JsonForm[item.id].FNumber = (value + '').split('-')[1]
+    },
+    againSetUnit (value) {
+      console.log(value)
+      var _this = this
+      var obj = this.ApiData['FUnitGroupID'].filter(f => {
+        return f.FDefaultUnitID * 1 === value * 1
+      })
+      console.log(obj)
+      var params = {
+        Data: {
+          Filter: "FParentID = '" + obj[0].FUnitGroupID + "' "
+        }
+      }
+      var list = ['FUnitID', 'FOrderUnitID', 'FSaleUnitID', 'FProductUnitID', 'FStoreUnitID', 'FSecUnitID']
+      var url = 'MeasureUnitGetAll'
+
+      _this.loading = true
+      _this.$store
+        .dispatch(url, params)
+        .then(res => {
+          list.forEach(f => {
+            // _this.JsonForm[f] = ''
+            _this.ApiData[f] = res.Data.Data
+          })
+        })
+        .finally(f => {
+          _this.loading = false
+        })
     },
     OnGetSel (item) {
       var val = ''
@@ -411,3 +481,11 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .spin-content {
+    border: 1px solid #91d5ff;
+    background-color: #e6f7ff;
+    padding: 30px;
+  }
+</style>

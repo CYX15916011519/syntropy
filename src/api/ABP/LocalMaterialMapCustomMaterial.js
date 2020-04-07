@@ -7,7 +7,8 @@ const api = {
   Create: 'Create',
   Update: 'Update',
   Delete: 'Delete',
-  GetByFItemID: 'GetByLocalItemFumber'
+  GetByFItemID: 'GetByLocalItemFumber',
+  GetByLocalItemCustomID: 'GetByLocalItemCustomID'
 }
 
 export default api
@@ -49,6 +50,14 @@ export function Delete (parameter) {
 export function GetByFItemID (parameter) {
   return axios({
     url: api.BaseUrl + api.GetByFItemID,
+    method: 'get',
+    params: parameter
+  })
+}
+
+export function GetByFItemID2 (parameter) {
+  return axios({
+    url: api.BaseUrl + api.GetByLocalItemCustomID,
     method: 'get',
     params: parameter
   })

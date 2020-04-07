@@ -59,7 +59,7 @@ const materialTemplate = {
           .then(response => {
             const result = response.result
             commit('SET_LIST', result)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)

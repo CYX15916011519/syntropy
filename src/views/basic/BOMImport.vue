@@ -7,8 +7,8 @@
         <a-step title="导入情况" description="" />
       </a-steps>
       <div class="content">
-        <step1 v-if="currentTab === 0" @nextStep="nextStep" />
-        <step2 v-if="currentTab === 1" @nextStep="nextStep" @prevStep="prevStep" />
+        <step1 v-if="currentTab === 0" @nextStep="nextStep" @IsSuccess="setTableVal" @SetCustID="SetCustID"/>
+        <step2 v-if="currentTab === 1" @nextStep="nextStep" @prevStep="prevStep" :listObj="TableVal" :custID="CustID" />
         <step3 v-if="currentTab === 2" @prevStep="prevStep" @finish="finish" />
       </div>
     </a-card>
@@ -20,8 +20,9 @@ export default {
   name: 'BOMImport',
   components: {
     Step1: () => import('./BOMImport/Import'),
-    Step2: () => import('./BOMImport/Import'),
-    Step3: () => import('./BOMImport/Import')
+    Step2: () => import('./BOMImport/TestInfo'),
+    Step2: () => import('./BOMImport/MaterialCheck')
+    // Step3: () => import('./BOMImport/ImportResult')
   },
   data () {
     return {
@@ -29,17 +30,32 @@ export default {
       currentTab: 0,
       loading: false,
       // form
-      form: null
+      form: null,
+      TableVal: {},
+      CustID: 0
     }
   },
   methods: {
+    // handler
     nextStep () {
       if (this.currentTab < 2) {
         this.currentTab += 1
       }
     },
-    prevStep () {},
-    finish () {}
+    prevStep () {
+      if (this.currentTab > 0) {
+        this.currentTab -= 1
+      }
+    },
+    finish () {
+      this.currentTab = 0
+    },
+    setTableVal (val) {
+      this.TableVal = val
+    },
+    SetCustID (val) {
+      this.CustID = val
+    }
   }
 }
 </script>

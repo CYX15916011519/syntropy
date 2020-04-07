@@ -1,11 +1,12 @@
-import { Get, GetAll, Save, Delete } from '@/api/K3/Customer'
+import { Get, GetAll, Save, Delete, GetByFItemID } from '@/api/K3/Customer'
 
 const Customer = {
   state: {
     List: [],
     Detailed: {},
     saveRestult: {},
-    deleteRestult: {}
+    deleteRestult: {},
+    GetByFItemIDRestult: {}
   },
   mutations: {
     SET_LIST: (state, List) => {
@@ -19,10 +20,25 @@ const Customer = {
     },
     SET_DELETE: (state, deleteRestult) => {
       state.deleteRestult = deleteRestult
+    },
+    SET_GETBYFITEMID: (state, GetByFItemIDRestult) => {
+      state.GetByFItemIDRestult = GetByFItemIDRestult
     }
   },
-
   actions: {
+    // 获取明细
+    CustomerGetByFItemID ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        GetByFItemID(parame)
+          .then(response => {
+            commit('SET_GETBYFITEMID', response)
+            resolve(response)
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
     // 获取明细
     CustomerGet ({ commit }, parame) {
       return new Promise((resolve, reject) => {

@@ -1,6 +1,6 @@
 <template>
   <div class="footer">
-    <div class="links">
+    <div class="links" v-if="false">
       <a
         href="https://pro.loacg.com/"
         target="_blank"
@@ -16,7 +16,7 @@
     </div>
     <div class="copyright">
       Copyright
-      <a-icon type="copyright" /> 2020 <span>佛山市捷特软件有限公司</span>
+      <a-icon type="copyright" /> 2020 <span>佛山市捷特科技有限公司</span>
     </div>
   </div>
 </template>

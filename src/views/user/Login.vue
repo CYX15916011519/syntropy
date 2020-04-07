@@ -13,7 +13,7 @@
         @change="handleTabClick"
       >
         <a-tab-pane key="tab1" tab="账号密码登录">
-          <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" message="账户或密码错误（admin/ant.design )" />
+          <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" message="账户或密码错误（admin)" />
           <a-form-item>
             <a-input
               size="large"
@@ -21,7 +21,7 @@
               placeholder="账户: admin"
               v-decorator="[
                 'usernameOrEmailAddress',
-                {rules: [{ required: true, message: '请输入帐户名或邮箱地址' }, { validator: handleUsernameOrEmail }], validateTrigger: 'change'}
+                {rules: [{ required: true, message: '请输入帐户名或邮箱地址，默认admin' }, { validator: handleUsernameOrEmail }], validateTrigger: 'change'}
               ]"
             >
               <a-icon slot="prefix" type="user" :style="{ color: 'rgba(0,0,0,.25)' }"/>
@@ -32,7 +32,7 @@
               size="large"
               type="password"
               autocomplete="false"
-              placeholder="密码: admin or ant.design"
+              placeholder="密码: 123qwe"
               v-decorator="[
                 'password',
                 {rules: [{ required: true, message: '请输入密码' }], validateTrigger: 'blur'}
@@ -42,14 +42,14 @@
             </a-input>
           </a-form-item>
           <a-form-item>
-            <a-select :defaultValue="account" placeholder="请选择账套" @change="handleChange">
+            <a-select :defaultValue="GetDefaultAccount" placeholder="请选择账套" @change="handleChange" v-model="GetDefaultAccount">
               <a-select-option v-for="item in AccountList" :key="item.id" :value="item.authorityCode + ',' + item.id">
                 {{ item.name }}
               </a-select-option>
             </a-select>
           </a-form-item>
         </a-tab-pane>
-        <a-tab-pane key="tab2" tab="手机号登录">
+        <a-tab-pane key="tab2" v-if="false" tab="手机号登录">
           <a-form-item>
             <a-input size="large" type="text" placeholder="手机号" v-decorator="['mobile', {rules: [{ required: true, pattern: /^1[34578]\d{9}$/, message: '请输入正确的手机号' }], validateTrigger: 'change'}]">
               <a-icon slot="prefix" type="mobile" :style="{ color: 'rgba(0,0,0,.25)' }"/>
@@ -77,7 +77,7 @@
         </a-tab-pane>
       </a-tabs>
 
-      <a-form-item>
+      <a-form-item v-show="false">
         <a-checkbox v-decorator="['rememberMe']">自动登录</a-checkbox>
         <router-link
           :to="{ name: 'recover', params: { user: 'aaa'} }"
@@ -97,7 +97,7 @@
         >确定</a-button>
       </a-form-item>
 
-      <div class="user-login-other">
+      <div class="user-login-other" v-show="false">
         <span>其他登录方式</span>
         <a>
           <a-icon class="item-icon" type="alipay-circle"></a-icon>
@@ -159,6 +159,19 @@ export default {
       loading: false
     }
   },
+  computed: {
+    GetDefaultAccount () {
+      var val = ''
+      if (this.AccountList.length > 0) {
+        this.AccountList.forEach(item => {
+          val = item.authorityCode + ',' + item.id
+          // this.account = val.split(',')[0]
+          // this.SetBookID = val.split(',')[1]
+        })
+      }
+      return val
+    }
+  },
   created () {
     // get2step({ })
     //   .then(res => {
@@ -177,14 +190,21 @@ export default {
     OnSearch () {
       var _this = this
       this.loading = true
+       this.loginBtn = true
       _this.AccountList = []
       this.$store.dispatch('connectGetAll', {
         SkipCount: 0,
         MaxResultCount: 10,
         Sorting: 'name' }).then(res => {
         _this.AccountList = this.$store.state.K3ApiUrl.connectList.items
+        _this.AccountList.forEach(item => {
+          var val = item.authorityCode + ',' + item.id
+          this.account = val.split(',')[0]
+          this.SetBookID = val.split(',')[1]
+        })
       }).finally(f => {
         this.loading = false
+        this.loginBtn = false
       })
     },
     ...mapActions(['Login', 'Logout']),

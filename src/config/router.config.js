@@ -8,9 +8,8 @@ export const asyncRouterMap = [
     name: 'index',
     component: BasicLayout,
     meta: { title: '首页' },
-    redirect: '/basic/basicmaterialsetup',
+    redirect: '/basic',
     children: [
-      // dashboard
       // other
       {
         path: '/basic',
@@ -24,11 +23,18 @@ export const asyncRouterMap = [
             name: 'basicmaterialsetup',
             component: () => import('@/views/basic/materialsetup'),
             meta: { title: '物料模板设置', icon: 'tag', keepAlive: false, permission: [ 'dashboard' ] }
-          }, {
-            path: '/basic/codemanage',
-            name: 'basiccodemanage',
-            component: () => import('@/views/basic/codemanage'),
-            meta: { title: '编码对应管理', icon: 'book', keepAlive: true, permission: [ 'dashboard' ] }
+          },
+          // {
+          //   path: '/basic/codemanage',
+          //   name: 'basiccodemanage',
+          //   component: () => import('@/views/basic/codemanage'),
+          //   meta: { title: '客供编码管理-物料', icon: 'book', keepAlive: true, permission: [ 'dashboard' ] }
+          // },
+          {
+            path: '/basic/codemanage2',
+            name: 'basiccodemanage2',
+            component: () => import('@/views/basic/codemanage2'),
+            meta: { title: '客供编码管理-客户', icon: 'import', keepAlive: true, permission: [ 'dashboard' ] }
           },
           {
             path: '/basic/BOMImport',

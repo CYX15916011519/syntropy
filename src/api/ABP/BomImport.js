@@ -1,17 +1,26 @@
-import { axiosk3 as axios } from '@/utils/K3Api'
+import { axios } from '@/utils/request'
 
 const api = {
-  BaseUrl: '/K3API/Account/',
-  Get: 'GetTemplate',
-  GetAll: 'GetList',
-  Create: 'Save',
+  BaseUrl: '/api/services/app/BomImportAppServices/',
+  Get: 'Get',
+  GetAll: 'GetAll',
+  Create: 'Create',
   Update: 'Update',
   Delete: 'Delete',
-  GetByFItemID: 'GetDetail',
-  Check: 'CheckItem'
+  GetByFItemID: 'GetByLocalItemFumber',
+  Check: 'TestBomImportData'
 }
 
 export default api
+
+export function Check (obj) {
+  console.log(obj)
+  return axios({
+    url: api.BaseUrl + api.Check + '?CustID=' + obj.params.CustID,
+    method: 'post',
+    data: obj.data
+  })
+}
 
 export function Get (parameter) {
   return axios({
@@ -24,8 +33,8 @@ export function Get (parameter) {
 export function GetAll (parameter) {
   return axios({
     url: api.BaseUrl + api.GetAll,
-    method: 'post',
-    data: parameter
+    method: 'get',
+    params: parameter
   })
 }
 
@@ -52,13 +61,5 @@ export function GetByFItemID (parameter) {
     url: api.BaseUrl + api.GetByFItemID,
     method: 'get',
     params: parameter
-  })
-}
-
-export function Check (parameter) {
-  return axios({
-    url: api.BaseUrl + api.Check,
-    method: 'post',
-    data: parameter
   })
 }

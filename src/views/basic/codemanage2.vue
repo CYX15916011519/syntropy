@@ -1,18 +1,37 @@
 <template>
   <a-card :bordered="false">
     <a-row :gutter="8">
-      <a-col :span="6">
+      <a-col :span="4">
         <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" v-if="false" />
         <a-tree :treeData="GettreeData" @select="onSelect"></a-tree>
       </a-col>
-      <a-col :span="18">
+      <a-col :span="20">
         <div class="table-operations">
-          <Handle :handle="'reload,add,delete,edit'" @add="OnAdd" @edit="OnEdit" @reload="OnReload" @delete="OnDelete" />
+          <Handle
+            :handle="'reload,add,delete,edit,import'"
+            @add="OnAdd"
+            @edit="OnEdit"
+            @reload="OnReload"
+            @delete="OnDelete"
+            @import="OnImport"
+          />
+          <!-- <Handle
+            :handle="'reload,import'"
+            @reload="OnReload"
+            @import="OnImport"
+          /> -->
         </div>
         <!-- 分页 -->
-        <pagination :current="pagination.current" :total="pagination.total" @pageChange="onPaginationChange" :selRow="selectedRowKeys.length" hidden />
+        <pagination
+          :current="pagination.current"
+          :total="pagination.total"
+          @pageChange="onPaginationChange"
+          :selRow="selectedRowKeys.length"
+          hidden
+        />
         <a-table
-          :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+          :size="'small'"
+          :rowSelection="{ selectedRowKeys: selectedRowKeys, selectedRows: selectedRows, onChange: onSelectChange }"
           :columns="columns"
           :rowKey="record => record.id"
           :dataSource="data"
@@ -30,33 +49,40 @@
     </a-row>
     <component :is="currentComponet" :isHide="showModel" @Close="Close"></component>
     <AddOrEdit ref="AddOrEdit" @Success="OnReload" />
+    <Import ref="Import" @Success="OnReload" />
   </a-card>
 </template>
 
 <script>
 const columns = [
+  // {
+  //   title: 'Id',
+  //   dataIndex: 'FID',
+  //   width: '5%'
+  // },
   {
-    title: 'Id',
-    dataIndex: 'id',
-    width: '5%'
-  },
-  {
-    title: '客户ID',
-    dataIndex: 'customID',
+    title: 'K3物料编码',
+    dataIndex: 'FMeterialId',
     sorter: true,
     width: '20%'
   },
   {
-    title: '客户物料编码',
-    dataIndex: 'customFNumber',
-    sorter: true,
-    width: '45%'
-  },
-  {
-    title: '本地物料编码',
-    dataIndex: 'localFNumber',
+    title: 'K3物料名称',
+    dataIndex: 'FInvMeterName',
     sorter: true,
     width: '20%'
+  },
+  {
+    title: '客供物料编码',
+    dataIndex: 'FMeterName',
+    sorter: true,
+    width: '30%'
+  },
+  {
+    title: '客供物料名称',
+    dataIndex: 'FTaxCode',
+    sorter: true,
+    width: '30%'
   }
 ]
 export default {
@@ -64,12 +90,14 @@ export default {
     Handle: () => import('@/JITComponents/handle'),
     pagination: () => import('@/JITComponents/Pagination'),
     STree: () => import('@/components/Tree/Tree'),
-    AddOrEdit: () => import('./codemanage/AddOrEdit')
+    AddOrEdit: () => import('./codemanage2/AddOrEdit'),
+    Import: () => import('./codemanage2/Import')
   },
   mounted () {
+    this.GetWL()
     this.OnSearch()
   },
-  name: 'Materialsetup',
+  name: 'Codemanage2',
   computed: {
     GettreeData () {
       return this.treeData
@@ -80,7 +108,8 @@ export default {
       currentComponet: '',
       showModel: false,
       selectedKeys: [],
-      treeData: [{ title: '物料', key: '', children: [] }],
+      selectedRows: [],
+      treeData: [{ title: '客户', key: '', children: [] }],
       data: [],
       pagination: {
         current: 1,
@@ -121,6 +150,10 @@ export default {
     }
   },
   methods: {
+    // 导入
+    OnImport () {
+      this.$refs.Import.showModal()
+    },
     // s
     OnHandle (value) {
       value()
@@ -133,17 +166,16 @@ export default {
     // 新增
     OnAdd () {
       if (this.selectedKeys.length === 0) {
-        this.$message.warning('请选择物料')
+        this.$message.warning('请选择客户')
       } else {
-        this.$refs.AddOrEdit.show({ id: 0, fItemID: this.selectedKeys[0] })
+        this.$refs.AddOrEdit.show({ FCustomer: this.selectedKeys[0] })
       }
-      // this.showModel = true
     },
     OnEdit () {
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要修改的数据')
       } else {
-        this.$refs.AddOrEdit.show({ id: this.selectedRowKeys[0] })
+        this.$refs.AddOrEdit.show({ FBillNo: this.selectedRows[0].FBillNo })
       }
     },
     OnDelete () {
@@ -151,12 +183,17 @@ export default {
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要删除的数据')
       } else if (this.selectedRowKeys.length === 1) {
+        var obj = {
+          Data: {
+            FBillNo: this.selectedRows[0].FBillNo
+          }
+        }
         _this.loading = true
         _this.$store
-          .dispatch('LocalMaterialMapCustomMaterialDelete', { id: this.selectedRowKeys[0] })
+          .dispatch('Bill1000200Delete', obj)
           .then(res => {
-            var Restult = this.$store.state.LocalMaterialMapCustomMaterial.deleteRestult
-            if (Restult.success) {
+            var Restult = this.$store.state.Bill1000200.deleteRestult
+            if (Restult.StatusCode === 200) {
               this.$message.success('删除成功')
               this.OnReload()
             } else {
@@ -185,6 +222,7 @@ export default {
     },
     onSelect (selectedKeys, info) {
       this.selectedKeys = selectedKeys
+      console.log(selectedKeys)
       this.OnTableSearch()
     },
     // 切换分页
@@ -195,7 +233,8 @@ export default {
       this.params.MaxResultCount = this.pagination.pageSize
       this.OnSearch()
     },
-    onSelectChange (selectedRowKeys) {
+    onSelectChange (selectedRowKeys, selectedRows) {
+      this.selectedRows = selectedRows
       this.selectedRowKeys = selectedRowKeys
     },
     handleTableChange (pagination, filters, sorter) {
@@ -205,78 +244,110 @@ export default {
     },
     OnSearchParams () {
       if (this.selectedKeys.length === 0) {
-        this.$message.warning('请选择物料')
+        this.$message.warning('请选择客户')
         return {}
       } else {
         return {
-          FNumber: this.selectedKeys[0]
+          CustomID: this.selectedKeys[0]
         }
       }
     },
     OnSearch (type) {
-      console.log(type)
-      var _this = this
-      _this.loading = true
-      var obj = _this.MaterialGroupGetAllParams
-      if (type !== undefined) {
-        obj = _this.MaterialGroupGetAllParams2
-      }
-      _this.$store
-        .dispatch('MaterialGroupGetAll', obj)
-        .then(res => {
-          var list = this.$store.state.MaterialGroup.List.Data
-          list.forEach(item => {
-            var listd = (item.FNumber + '').lastIndexOf('.')
-            var ParentID = (item.FNumber + '').substring(0, listd)
-            _this.newlist.push({
-              title: item.FNumber.replace(ParentID + '.', '') + '(' + item.FName + ')',
-              key: item.FItemID,
-              value: item.FNumber,
-              ParentID: ParentID
-            })
-          })
-          if (type !== undefined) {
-            _this.treeData = _this.GetTreeList('')
-          } else {
-            _this.OnSearch(2)
-          }
-          // _this.treeData = [{ title: '物料', key: 0, value: '', ParentID: '', children: _this.GetTreeList('') }]
-        })
-        .finally(f => {
-          _this.loading = false
-        })
+      this.GetCustomList()
     },
     OnTableSearch () {
+      var params = {
+        Data: {
+          Top: '100',
+          PageSize: '100000',
+          PageIndex: '1',
+          Filter: "[FCustomer] = '" + this.OnSearchParams().CustomID + "' ",
+          OrderBy: '[FCustomer] asc',
+          SelectPage: '1',
+          Fields: 'FMeterName,FMeterialCode,FInvMeterName,FTaxCode'
+        }
+      }
       var _this = this
       _this.loading = true
       _this.$store
-        .dispatch('LocalMaterialMapCustomMaterialGetByFItemID', this.OnSearchParams())
+        .dispatch('Bill1000200GetAll', params)
         .then(res => {
-          this.data = this.$store.state.LocalMaterialMapCustomMaterial.GetByFItemIDList.result
-          this.pagination.total = this.$store.state.LocalMaterialMapCustomMaterial.GetByFItemIDList.length
+          res.Data.DATA.forEach(f => {
+            var list = _this.newlist.filter(a => { return a.FItemID * 1 === f.FMeterialCode * 1 })
+            // console.log(f.FMeterialCode)
+            if (list.length > 0) {
+              // console.log(list)
+              f.FMeterialId = list[0].FNumber
+            }
+          })
+          this.data = res.Data.DATA
+          this.pagination.total = res.Data.DATA.length
         })
         .finally(f => {
           _this.loading = false
         })
     },
-    GetTreeList (ParentID) {
+    GetCustomList () {
       var _this = this
-      var list = _this.GetChildMenuList(ParentID)
-      list.forEach(item => {
-        if (_this.GetTreeList(item.value).length > 0) {
-          item.children = _this.GetTreeList(item.value)
+      _this.$store.dispatch('CustomerGetAll', {}).then(() => {
+        // console.log(this.$store.state.Customer.List)
+        var result = this.$store.state.Customer.List
+        if (result.StatusCode === 200) {
+          result.Data.Data.forEach(item => {
+            item.title = item.FNumber + ' ' + item.FName
+            item.key = item.FItemID
+          })
+          _this.treeData = result.Data.Data
+        } else {
+          _this.$notification['error']({
+            message: result.error.message,
+            description: result.error.details
+          })
         }
-      })
-      return list
-    },
-    GetChildMenuList (ParentID) {
-      return this.newlist.filter(f => {
-        return f.ParentID === ParentID
       })
     },
     onChange (e) {
       const value = e.target.value
       console.log(value)
+    },
+    GetWL () {
+      var _this = this
+      var MaterialGroupGetAllParams = {
+        Data: {
+          FUNDetail: 1,
+          Top: '0',
+          PageSize: '10000',
+          PageIndex: '1',
+          Filter: "FNumber like '%%'",
+          OrderBy: 'FNumber asc',
+          Fields: 'FNumber,FName'
+        }
+      }
+      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams).then(res => {
+        // console.log(this.$store.state.MaterialGroup.List.Data)
+        var list = this.$store.state.MaterialGroup.List.Data
+        list.forEach(item => {
+          _this.newlist.push(item)
+        })
+      })
+      var MaterialGroupGetAllParams2 = {
+        Data: {
+          FUNDetail: 0,
+          Top: '0',
+          PageSize: '10000',
+          PageIndex: '1',
+          Filter: "FNumber like '%%'",
+          OrderBy: 'FNumber asc',
+          Fields: 'FNumber,FName,FItemID'
+        }
+      }
+      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams2).then(res => {
+        // console.log(this.$store.state.MaterialGroup.List.Data)
+        var list = this.$store.state.MaterialGroup.List.Data
+        list.forEach(item => {
+          _this.newlist.push(item)
+        })
+      })
     }
   }
 }

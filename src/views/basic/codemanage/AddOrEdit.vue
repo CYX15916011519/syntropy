@@ -1,20 +1,24 @@
 <!--页面代码-->
 <template>
-  <a-spin tip="保存中，请稍等..." :spinning="spinning">
-    <a-modal
-      :title="title"
-      :visible="visible"
-      :maskClosable="false"
-      @ok="handleOk"
-      @cancel="handleCancel"
-      width="55%"
-    >
+  <a-modal
+    :title="title"
+    :visible="visible"
+    :maskClosable="false"
+    @ok="handleOk"
+    @cancel="handleCancel"
+    width="55%"
+  >
+    <a-spin tip="保存中，请稍等..." :spinning="spinning">
       <a-form :form="form" @submit="handleSubmit" :layout="formLayout">
         <a-form-item label="客户编码：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
           <a-input v-model="form.customFNumber" placeholder />
         </a-form-item>
-        <a-form-item label="本地物料编码：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-          <a-input v-model="form.localFNumber" placeholder disabled/>
+        <a-form-item
+          label="本地物料编码："
+          :label-col="formItemLayout.labelCol"
+          :wrapper-col="formItemLayout.wrapperCol"
+        >
+          <a-input v-model="form.localFNumber" placeholder disabled />
         </a-form-item>
         <a-form-item label="客户：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
           <a-select style="width: 100%" v-model="form.customID">
@@ -24,8 +28,8 @@
           </a-select>
         </a-form-item>
       </a-form>
-    </a-modal>
-  </a-spin>
+    </a-spin>
+  </a-modal>
 </template>
 <!--脚本文件-->
 <script>

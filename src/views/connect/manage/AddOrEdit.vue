@@ -1,40 +1,20 @@
 <!--页面代码-->
 <template>
-  <a-spin tip="保存中，请稍等..." :spinning="spinning">
-    <a-modal
-      :title="title"
-      :visible="visible"
-      :maskClosable="false"
-      @ok="handleOk"
-      @cancel="handleCancel"
-      width="30%"
-    >
+  <a-modal :title="title" :visible="visible" :maskClosable="false" @ok="handleOk" @cancel="handleCancel">
+    <a-spin tip="保存中，请稍等..." :spinning="spinning">
       <a-form :form="form" @submit="handleSubmit" :layout="formLayout">
-        <a-form-item
-          label="账套名称："
-          :label-col="formItemLayout.labelCol"
-          :wrapper-col="formItemLayout.wrapperCol"
-        >
-          <a-input v-model="form.name" placeholder/>
+        <a-form-item label="账套名称：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+          <a-input v-model="form.name" placeholder />
         </a-form-item>
-        <a-form-item
-          label="连接秘钥："
-          :label-col="formItemLayout.labelCol"
-          :wrapper-col="formItemLayout.wrapperCol"
-        >
-          <a-input v-model="form.authorityCode" placeholder/>
+        <a-form-item label="连接秘钥：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+          <a-input v-model="form.authorityCode" placeholder />
         </a-form-item>
-        <a-form-item
-          label="备注："
-          :label-col="formItemLayout.labelCol"
-          :wrapper-col="formItemLayout.wrapperCol"
-        >
-          <a-input v-model="form.remark" placeholder/>
+        <a-form-item label="备注：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+          <a-input v-model="form.remark" placeholder />
         </a-form-item>
-
       </a-form>
-    </a-modal>
-  </a-spin>
+    </a-spin>
+  </a-modal>
 </template>
 <!--脚本文件-->
 <script>

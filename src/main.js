@@ -18,6 +18,10 @@ import './permission' // permission control
 import './utils/filter' // global filter
 import './components/global.less'
 
+// import 'ant-design-vue/dist/antd.css'
+// import Antd from 'ant-design-vue'
+// Vue.use(Antd)
+
 Vue.config.productionTip = false
 Vue.config.$store = store
 // mount axios Vue.$http and this.$http

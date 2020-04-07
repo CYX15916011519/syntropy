@@ -10,13 +10,13 @@ import { ACCESS_TOKEN } from '@/store/mutation-types'
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['login', 'register', 'registerResult'] // no redirect whitelist
-const defaultRoutePath = '/dashboard/workplace'
+const defaultRoutePath = '/basic/basicmaterialsetup'
 
 router.beforeEach((to, from, next) => {
   NProgress.start() // start progress bar
   to.meta && (typeof to.meta.title !== 'undefined' && setDocumentTitle(`${to.meta.title} - ${domTitle}`))
-  // console.log(Vue.ls.get(ACCESS_TOKEN + 'K3'))
-  if (Vue.ls.get(ACCESS_TOKEN)) {
+  console.log('K3-' + Vue.ls.get(ACCESS_TOKEN + 'K3'))
+  if (Vue.ls.get(ACCESS_TOKEN) && Vue.ls.get(ACCESS_TOKEN + 'K3')) {
     /* has token */
     if (to.path === '/user/login') {
       next({ path: defaultRoutePath })
@@ -37,6 +37,7 @@ router.beforeEach((to, from, next) => {
       }
     }
   } else {
+    // console.log(111)
     if (whiteList.includes(to.name)) {
       // 在免登录白名单，直接进入
       next()

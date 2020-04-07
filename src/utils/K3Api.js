@@ -7,12 +7,18 @@ import { ACCESS_TOKEN } from '@/store/mutation-types'
 
 var baseURL = ''
 var url = window.location.href
-if (url.indexOf('http://192.168') >= 0 || url.indexOf('localhost') >= 0) {
+// console.log(url)
+if (url.indexOf('localhost') >= 0) {
   baseURL = 'http://139.9.6.165:800'
-} else {
+} 
+else if (url.indexOf('http://192.168') >= 0) {
+  baseURL = 'http://192.168.10.2:800'
+}
+else {
   // 正式环境
   baseURL = 'http://139.9.6.165:800'
 }
+baseURL = 'http://192.168.10.2:800'
 // 创建 axios 实例
 const service = axios.create({
   // baseURL: process.env.VUE_APP_API_BASE_URL, // api base_url
@@ -26,7 +32,7 @@ const service = axios.create({
 const err = (error) => {
   if (error.response) {
     const data = error.response.data
-    const token = Vue.ls.get(ACCESS_TOKEN)
+    const token = Vue.ls.get(ACCESS_TOKEN + 'K3')
     if (error.response.status === 403) {
       notification.error({
         message: 'Forbidden',
@@ -50,26 +56,34 @@ const err = (error) => {
   return Promise.reject(error)
 }
 
-// request interceptor
-service.interceptors.request.use(config => {
-  // console.log(config)
-  const token = Vue.ls.get(ACCESS_TOKEN + 'K3')
+var isLogin = true
+service.interceptors.request.use(async config => {
+  var token = Vue.ls.get(ACCESS_TOKEN + 'K3')
+  if (!token && isLogin) {
+    console.log('Token过期')
+    isLogin = false
+    await store.dispatch('TokenGet').then(async (res) => {
+      isLogin = true
+      token = Vue.ls.get(ACCESS_TOKEN + 'K3')
+    })
+  }
   if (token) {
     config.params = {
       token: token,
       ...config.params
     }
-    // config.headers['Access-Token'] = token // 让每个请求携带自定义 token 请根据实际情况自行修改
-    // config.headers.common['Authorization'] = 'Bearer ' + token
-    // config.headers.common['.AspNetCore.Culture'] = 'zh-Hans'
-    // config.headers.common['Host'] = window.location.host
   }
   return config
 }, err)
 
 // response interceptor
 service.interceptors.response.use((response) => {
-  // console.log(response)
+  if (response.data.StatusCode !== 200) {
+    notification.error({
+      message: 'Forbidden',
+      description: response.data.Message
+    })
+  }
   return response.data
 }, err)
 

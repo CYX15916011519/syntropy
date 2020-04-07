@@ -7,20 +7,25 @@ import { ACCESS_TOKEN } from '@/store/mutation-types'
 
 var baseURL = ''
 var url = window.location.href
-if (url.indexOf('http://192.168') >= 0 || url.indexOf('localhost') >= 0) {
-  baseURL = 'http://139.9.6.165:8099'
+if (url.indexOf('localhost') >= 0) {
+  baseURL = 'http://localhost:8099'
+} else if (url.indexOf('http://192.168') >= 0) {
+  baseURL = 'http://' + window.location.hostname + ':8099'
 } else {
   // 正式环境
   baseURL = 'http://139.9.6.165:8099'
 }
+// baseURL = 'http://localhost:21021'
+// baseURL = 'http://139.9.6.165:8099'
 // 创建 axios 实例
 const service = axios.create({
   // baseURL: process.env.VUE_APP_API_BASE_URL, // api base_url
   baseURL: baseURL,
-  timeout: 6000 // 请求超时时间
+  crossDomain: true,
+  timeout: 15000 // 请求超时时间
 })
 
-const err = (error) => {
+const err = error => {
   if (error.response) {
     const data = error.response.data
     const token = Vue.ls.get(ACCESS_TOKEN)
@@ -61,7 +66,7 @@ service.interceptors.request.use(config => {
 }, err)
 
 // response interceptor
-service.interceptors.response.use((response) => {
+service.interceptors.response.use(response => {
   // console.log(response)
   return response.data
 }, err)
@@ -73,7 +78,4 @@ const installer = {
   }
 }
 
-export {
-  installer as VueAxios,
-  service as axios
-}
+export { installer as VueAxios, service as axios }

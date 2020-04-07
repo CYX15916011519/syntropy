@@ -16,13 +16,13 @@
       <route-view></route-view>
 
       <div class="footer">
-        <div class="links">
+        <div class="links" v-if="false">
           <a href="_self">帮助</a>
           <a href="_self">隐私</a>
           <a href="_self">条款</a>
         </div>
         <div class="copyright">
-          Copyright &copy; 2020 佛山市捷特有限公司
+          Copyright &copy; 2020 佛山市捷特科技有限公司
         </div>
       </div>
     </div>
