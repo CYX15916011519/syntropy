@@ -94,7 +94,6 @@ export default {
     Import: () => import('./codemanage2/Import')
   },
   mounted () {
-    // this.GetWL()
     this.OnSearch()
   },
   name: 'Codemanage2',
@@ -286,45 +285,6 @@ export default {
     },
     onChange (e) {
       const value = e.target.value
-    },
-    GetWL () {
-      var _this = this
-      var MaterialGroupGetAllParams = {
-        Data: {
-          FUNDetail: 1,
-          Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName'
-        }
-      }
-      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams).then(res => {
-        // console.log(this.$store.state.MaterialGroup.List.Data)
-        var list = this.$store.state.MaterialGroup.List.Data
-        list.forEach(item => {
-          _this.newlist.push(item)
-        })
-      })
-      var MaterialGroupGetAllParams2 = {
-        Data: {
-          FUNDetail: 0,
-          Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName,FItemID'
-        }
-      }
-      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams2).then(res => {
-        // console.log(this.$store.state.MaterialGroup.List.Data)
-        var list = this.$store.state.MaterialGroup.List.Data
-        list.forEach(item => {
-          _this.newlist.push(item)
-        })
-      })
     }
   }
 }

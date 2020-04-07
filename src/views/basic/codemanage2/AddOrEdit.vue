@@ -281,13 +281,48 @@ export default {
       })
     },
     GetWL () {
-      var _this = this
+      this.GetMaterielList()
+      this.GetMaterieDetailed()
+    },
+    //
+    GetMaterieDetailed () {
+      var MaterialGroupGetAllParams2 = {
+        Data: {
+          FUNDetail: 0,
+          Top: '0',
+          PageSize: 100,
+          PageIndex: 1,
+          Filter: "FNumber like '%%'",
+          OrderBy: 'FNumber asc',
+          Fields: 'FNumber,FName,FItemID'
+        }
+      }
+      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams2).then(res => {
+        // console.log(this.$store.state.MaterialGroup.List.Data)
+        var list = this.$store.state.MaterialGroup.List.Data
+        list.forEach(item => {
+          _this.data.push(item)
+        })
+      })
+       .finally(f => {
+          _this.loading = false
+          if (_this.$store.state.MaterialGroup.List.RowCount > _this.data.length) {
+            _this.MaterialGroupGetAllParams2.Data.PageIndex = _this.MaterialGroupGetAllParams2.Data.PageIndex * 1 + 1
+            _this.GetMaterieDetailed()
+          } else {
+            
+          }
+        })
+    },
+    //
+    GetMaterielList () {
+       var _this = this
       var MaterialGroupGetAllParams = {
         Data: {
           FUNDetail: 1,
           Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
+          PageSize: 100,
+          PageIndex: 1,
           Filter: "FNumber like '%%'",
           OrderBy: 'FNumber asc',
           Fields: 'FNumber,FName'
@@ -302,32 +337,21 @@ export default {
             return []
           }
           var tab = Object.keys(_this.data[0])
-          var colobj = []
           tab.forEach(k => {
             var col = { title: k, dataIndex: k, key: k, width: '145' }
-            colobj.push(col)
+            this.columns.push(col)
           })
-          this.columns = colobj
         })
       })
-      var MaterialGroupGetAllParams2 = {
-        Data: {
-          FUNDetail: 0,
-          Top: '0',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName,FItemID'
-        }
-      }
-      this.$store.dispatch('MaterialGroupGetAll', MaterialGroupGetAllParams2).then(res => {
-        // console.log(this.$store.state.MaterialGroup.List.Data)
-        var list = this.$store.state.MaterialGroup.List.Data
-        list.forEach(item => {
-          _this.data.push(item)
+      .finally(f => {
+          _this.loading = false
+          if (_this.$store.state.MaterialGroup.List.RowCount > _this.columns.length) {
+            _this.MaterialGroupGetAllParams.Data.PageIndex = _this.MaterialGroupGetAllParams.Data.PageIndex * 1 + 1
+            _this.GetMaterielList()
+          } else {
+            
+          }
         })
-      })
     }
   }
 }
