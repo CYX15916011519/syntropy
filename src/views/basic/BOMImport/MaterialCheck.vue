@@ -4,7 +4,7 @@
       <div>
         <br />
         <a-table
-          rowKey="wl"
+          :rowKey="uuid()"
           bordered
           :columns="getcolumns"
           :dataSource="getdataSource"
@@ -12,37 +12,26 @@
           :pagination="false"
           :scroll="{ x: 1300 }"
         >
-        <template slot="Info" slot-scope="text, record">
-            <a-tag color="red" v-if="record.Info.length > 0">{{record.Info}}</a-tag>
-        </template>
-        <template slot="SelectMaterial" slot-scope="text, record, index">
-            <a-select  v-if="record.Info.length > 0"
-              showSearch
-              :placeholder="'请选择物料用户'"
-              style="min-width:120px;"
-              :defaultValue="''"
-              @change="value => handleSelectChange(value, index, 'SelectMaterial')"
-            >
-              <a-select-option v-for="tmp in getMaterialList" :key="tmp.id">
-                {{ tmp.fNumber + '-' + tmp.name }}
-              </a-select-option>
-            </a-select>
-            <!-- <a-button type="primary" size="small" v-if="record.SelectMaterial !== ''" @click="TS(index)">提交</a-button> -->
-          </template>
         </a-table>
         <footer-tool-bar class="ftl">
           <a-button style="margin-left: 8px" @click="prevStep">上一步</a-button>
-          <a-button :loading="loading" @click="CheckData" v-if="!CheckSuccess">下一步</a-button>
-          <a-button :loading="loading" @click="nextStep" v-if="CheckSuccess">下一步</a-button>
+          <a-button style="margin-left: 8px" :loading="loading" @click="CheckData" v-if="!CheckSuccess"
+            >下一步</a-button
+          >
+          <a-button style="margin-left: 8px" :loading="loading" @click="nextStep" v-if="CheckSuccess">下一步</a-button>
         </footer-tool-bar>
       </div>
+      <CreateMaterial ref="CreateMaterial" @Success="CheckData" />
     </a-spin>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'MaterialCheck',  
+  components: {
+    CreateMaterial: () => import('./CreateMaterial')
+  },
+  name: 'MaterialCheck',
   props: {
     listObj: {
       type: Array,
@@ -72,81 +61,37 @@ export default {
     getcolumns() {
       return this.columns
     },
-    getMaterialList () {
+    getMaterialList() {
       return this.MaterialList
     }
   },
   beforeMount() {
-    this.GetMaterialList()
     this.loadTable()
     this.CheckData()
   },
   methods: {
-    // 下拉选择后
-    handleSelectChange (value, key, column) {
-      var _this = this
-      const newData = [...this.dataSource]
-      const target = newData[key]
-      if (target) {
-        // 获取对应物料编码
-        if (target[column] === '' && column === 'SelectMaterial') {
-          var params = { textHead: 'WL' }
-          this.$store.dispatch('JITCommonGetNumber', params).then(res => {
-            if (res.success) {
-              target['WlNumber'] = res.result
-              this.UpdateTable(target)
-            }
-          })
-        }
-        target[column] = value
-        this.dataSource = newData
-      }
-    },
     // 上一步
     prevStep() {
       this.$emit('prevStep')
     },
     // 下一步
     nextStep() {
+      this.$emit('IsSuccess', this.dataSource)
+      this.$emit('SetCustID', this.custID)
       this.$emit('nextStep')
-    },
-     // 获取下拉列表
-    GetMaterialList () {
-      var _this = this
-      var params = {
-        Data: {
-          Top: '10000',
-          PageSize: '10000',
-          PageIndex: '1',
-          Filter: "FNumber like '%%'",
-          OrderBy: 'FNumber asc',
-          Fields: 'FNumber,FName,FItemID'
-        }
-      }
-      _this.loading = false
-      _this.$store
-        .dispatch('materialTemplateGetAll', params)
-        .then(res => {
-          _this.MaterialList = res.result.items
-        })
-        .finally(f => {
-          _this.loading = false
-        })
     },
     // 加载表格
     loadTable() {
       var _this = this
-      var keys = Object.keys(_this.listObj[0])
-      keys.forEach(k => {
-        if (k === 'Info') {
-          _this.columns.push({ title: '校验情况', dataIndex: 'Info', key: 'Info', width: '145' })
-        } else if (k === 'SelectMaterial') {
-          _this.columns.push({ title: '选择物料模板', dataIndex: 'SelectMaterial', key: 'SelectMaterial', width: '245', scopedSlots: { customRender: 'SelectMaterial' } })
-        } else {
-          _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
-        }
+      _this.listObj.forEach(item => {
+        var keys = Object.keys(item)
+        keys.forEach(k => {
+          if (JSON.stringify(_this.columns).indexOf(JSON.stringify({ title: k, dataIndex: k, key: k, width: '145' }))===-1  && k.indexOf('EMPTY') === -1) {
+            _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
+          }
+        })
       })
-    
+
       this.dataSource = this.listObj
       this.count = this.dataSource.length
     },
@@ -158,6 +103,7 @@ export default {
       }
       // 不等于空则是客供BOM
       else {
+        this.CustomerSupply()
       }
     },
     // 自选BOM
@@ -170,9 +116,11 @@ export default {
           diclist.push(f.FNumber)
         }
       })
+      var List = this.dataSource
       var objList = []
       //
       var i = 0
+      var interror = 0
       diclist.forEach(async (f, index) => {
         var params = {
           Data: {
@@ -187,44 +135,113 @@ export default {
             if (res.StatusCode !== 200) {
               this.$message.error(res.Data)
             } else {
+              var FName = List.filter(a => {
+                return a.FNumber === f
+              })[0].FName
               if (res.Data.length === 0) {
-                objList.push({ Info: '物料不存在', FNumber: f })
+                objList.push({ FNumber: f, FName: FName })
               } else {
-                  if (f === '1.01.04.044444') {
-                     console.log(typeof res.Data[0].Data)
-                  }
                 if (typeof res.Data[0].Data === 'string') {
-                  objList.push({ Info: '物料不存在', FNumber: f })
-                } else {
-                  objList.push({ Info: '', FNumber: f })
+                  objList.push({ FNumber: f, FName: FName })
                 }
               }
             }
+          })
+          .catch(c => {
+            interror++
           })
           .finally(k => {
             i++
             if (i === diclist.length) {
               _this.loading = false
-              console.log(objList)
-              _this.UpdateFNumber(objList)
+              if (objList.length === 0 && interror === 0) {
+                _this.CheckSuccess = true
+                this.$message.success('物料检验通过')
+              } else {
+                _this.CheckSuccess = false
+                _this.$refs.CreateMaterial.showModal(objList, 0)
+              }
             }
           })
       })
     },
-    // 更改信息
-    UpdateFNumber(UpdateList) {
+    // 客供编码
+    CustomerSupply() {
       var _this = this
-      UpdateList.forEach(item => {
-        _this.dataSource.forEach(tmp => {
-          if (tmp.FNumber === item.FNumber) {
-              if (tmp.FNumber === '1.01.04.044444') {
-                     console.log( item.Info)
-                  }
-            tmp.Info = item.Info
-          }
-        })
+      // 客户信息
+      var CustID = _this.custID.split(',')[0]
+      // 去重物料
+      var diclist = []
+      this.dataSource.forEach(f => {
+        if (diclist.indexOf(f.FNumber) === -1) {
+          diclist.push(f.FNumber)
+        }
       })
-      _this.dataSource = _this.dataSource
+      //
+      var List = this.dataSource
+      var objList = []
+      //
+      var i = 0
+      var interror = 0
+      diclist.forEach(async (f, index) => {
+        var params = {
+          Data: {
+            Top: '100',
+            PageSize: '10',
+            PageIndex: '1',
+            Filter: "[FCustomer] = '" + CustID + "' and FMeterName = '" + f + "' ",
+            OrderBy: '[FCustomer] asc',
+            SelectPage: '1',
+            Fields: 'FMeterName,FMeterialCode,FInvMeterName,FTaxCode'
+          }
+        }
+        await _this.$store
+          .dispatch('Bill1000200GetAll', params)
+          .then(res => {
+            if (res.StatusCode === 200) {
+              var result = res.Data.DATA
+              if (result.length > 0) {
+              } else {
+                var FName = List.filter(a => {
+                  return a.FNumber === f
+                })[0].FName
+                objList.push({ FNumber: f, FName: FName })
+              }
+            } else {
+              this.$message.error('检验失败，请检查Excel格式是否合格！')
+            }
+          })
+          .catch(c => {
+            console.log(c)
+            interror++
+          })
+          .finally(k => {
+            i++
+            if (i === diclist.length) {
+              _this.loading = false
+              if (objList.length === 0 && interror === 0) {
+                _this.CheckSuccess = true
+                this.$message.success('物料检验通过')
+              } else if (objList.length > 0) {
+                _this.CheckSuccess = false
+                _this.$refs.CreateMaterial.showModal(objList, _this.custID)
+              }
+            }
+          })
+      })
+    },
+    // UUID
+    uuid() {
+      var s = []
+      var hexDigits = '0123456789abcdef'
+      for (var i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1)
+      }
+      s[14] = '4' // bits 12-15 of the time_hi_and_version field to 0010
+      s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1) // bits 6-7 of the clock_seq_hi_and_reserved to 01
+      s[8] = s[13] = s[18] = s[23] = '-'
+      var uuid = s.join('')
+      return uuid
     }
   }
 }

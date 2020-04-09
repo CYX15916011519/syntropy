@@ -52,7 +52,7 @@
         </footer-tool-bar>
       </div>
     </a-spin>
-    <selBOM ref="selBOM" @Success="OnReload" />
+    <SelMateriel ref="SelMateriel" @Success="OnReload" />
   </div>
 </template>
 
@@ -62,7 +62,7 @@ import TemplateSave from '@/views/basic/BOMImport/BOM'
 import Select from '@/views/basic/BOMImport/selectBOM'
 export default {
   components: {
-    selBOM: () => import('@/views/basic/BOMImport/selBOM.vue')
+    SelMateriel: () => import('@/views/basic/BOMImport/SelMateriel.vue')
   },
   name: 'TestInfo',
   props: {
@@ -74,13 +74,6 @@ export default {
       type: String,
       required: true
     }
-  },
-  beforeMount () {
-    this.GetSQLReport75()
-    this.GetStockList()
-    this.loadTable()
-    this.loadWLFNumber()
-    this.GetMaterialList('materialTemplate')
   },
   data () {
     return {
@@ -119,6 +112,13 @@ export default {
       return this.SQLReport75
     }
   },
+  beforeMount () {
+    this.GetSQLReport75()
+    this.GetStockList()
+    this.loadTable()
+    this.loadWLFNumber()
+    this.GetMaterialList('materialTemplate')
+  },
   methods: {
     // 上一步
     prevStep () {
@@ -139,7 +139,7 @@ export default {
     OnSelectWL (index, record) {
       this.SelectModel.index = index
       this.SelectModel.record = record
-      this.$refs.selBOM.show()
+      this.$refs.SelMateriel.show()
     },
     OnReload(FNumber, obj){
       const newData = [...this.dataSource]
@@ -181,12 +181,13 @@ export default {
     GetSQLReport75 () {
       var _this = this
       var params = {
-        Data: {
-          PageSize: '1000',
-          PageIndex: '1'
+          Data: {
+            PageSize: '1000',
+            PageIndex: '1'
+          },
+          SQLReport: _this.$Api.Url.BOMImportCheckUrl
         }
-      }
-      this.$store.dispatch('SQLReport75GetAll', params).then(res => {
+      this.$store.dispatch('SQLReportGetAll', params).then(res => {
         _this.SQLReport75 = res.Data.DATA
       })
     },
@@ -525,7 +526,7 @@ export default {
           },
           '*Number*': item.FNumber,
           '*CustNo*': this.custID.split(',')[1],
-          SQLReport: 'SQLReport82'
+          SQLReport: _this.$Api.Url.BOMImportCheckUrl
         }
         item['FNUMBER'] = ''
         item['FBOMNUMBER'] = ''
@@ -692,12 +693,6 @@ export default {
         .finally(f => {
           _this.loading = false
         })
-    },
-    // Api校验
-    ApiCheck () {
-      this.dataSource.forEach(f => {
-        // this.$store.dispatch('')
-      })
     }
   }
 }

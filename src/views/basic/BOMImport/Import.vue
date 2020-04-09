@@ -39,7 +39,7 @@
 import XLSX from 'xlsx'
 export default {
   name: 'Import',
-  data () {
+  data() {
     return {
       labelCol: { lg: { span: 8 }, sm: { span: 8 } },
       wrapperCol: { lg: { span: 16 }, sm: { span: 16 } },
@@ -57,25 +57,25 @@ export default {
       BOMType: '客供BOM导入'
     }
   },
-  beforeMount () {
+  beforeMount() {
     this.getCustomer('Customer')
   },
   computed: {
     // GetApiData
-    GetApiData () {
+    GetApiData() {
       return this.ApiData
     }
   },
   methods: {
-    nextStep () {
+    nextStep() {
       this.handleOK()
       // this.$emit('nextStep')
       // this.$emit('IsSuccess', this.ListObj)
     },
-    OnRemove () {
+    OnRemove() {
       this.fileList = []
     },
-    handleChange (info) {
+    handleChange(info) {
       const status = info.file.status
       if (status !== 'uploading') {
         // console.log(info.file, info.fileList)
@@ -86,17 +86,17 @@ export default {
         this.$message.error(`${info.file.name} file upload failed.`)
       }
     },
-    handleRemove (file) {
+    handleRemove(file) {
       const index = this.fileList.indexOf(file)
       const newFileList = this.fileList.slice()
       newFileList.splice(index, 1)
       this.fileList = newFileList
     },
-    beforeUpload (file) {
+    beforeUpload(file) {
       this.fileList = [...this.fileList, file]
       return false
     },
-    handleOK () {
+    handleOK() {
       var _this = this
       if ((_this.CustID === 0 || _this.CustID === '') && _this.BOMType === '客供BOM导入') {
         this.$message.warning('请选择客户')
@@ -113,14 +113,10 @@ export default {
       }
     },
     // 自选BOM
-    Optional () {
+    Optional() {
       var _this = this
-      var kk = 2 
+      var kk = 1
       if (kk === 1) {
-        _this.ListObj.body.forEach(f => {
-          f['Info'] = ''
-          f['SelectMaterial'] = ''
-        })
         this.$emit('nextStep')
         this.$emit('IsSuccess', _this.ListObj.body)
         this.$emit('SetCustID', _this.CustID)
@@ -153,7 +149,7 @@ export default {
               if (res.Data.length === 0) {
                 objList.push({ FNUMBER: '', FNumber: f })
               } else {
-                if (typeof res.Data[0].Data === 'string'){
+                if (typeof res.Data[0].Data === 'string') {
                   objList.push({ FNUMBER: '', FNumber: f })
                 } else {
                   objList.push({ FNUMBER: f, FNumber: f })
@@ -174,7 +170,7 @@ export default {
                   item['FNUMBER'] = tmp[0].FNUMBER
                 }
               })
-              console.log( _this.ListObj.body)
+              console.log(_this.ListObj.body)
               this.$emit('nextStep')
               this.$emit('IsSuccess', _this.ListObj.body)
               this.$emit('SetCustID', '')
@@ -188,9 +184,9 @@ export default {
       })
     },
     // 客供BOM
-    CustomerSupply () {
+    CustomerSupply() {
       var _this = this
-      var kk = 2 
+      var kk = 1
       if (kk === 1) {
         this.$emit('nextStep')
         this.$emit('IsSuccess', _this.ListObj.body)
@@ -208,7 +204,7 @@ export default {
           },
           '*Number*': item.FNumber,
           '*CustNo*': CustID,
-          SQLReport: 'SQLReport82'
+          SQLReport: _this.$Api.BOMImportCheckUrl
         }
         item['FNUMBER'] = ''
         item['FBOMNUMBER'] = ''
@@ -227,8 +223,7 @@ export default {
                 key.forEach(k => {
                   item[k] = resultMX[k]
                 })
-              }
-              else {
+              } else {
                 item['检验情况'] = '对应编码不存在'
               }
             } else {
@@ -238,7 +233,7 @@ export default {
           .finally(f => {
             _this.loading = false
             i = i + 1
-            if (i === _this.ListObj.body.length -1) {
+            if (i === _this.ListObj.body.length - 1) {
               this.$emit('nextStep')
               this.$emit('IsSuccess', _this.ListObj.body)
               this.$emit('SetCustID', _this.CustID)
@@ -246,7 +241,7 @@ export default {
           })
       })
     },
-    handleUpload () {
+    handleUpload() {
       // const { fileList } = this
       // const formData = new FormData()
       // fileList.forEach(file => {
@@ -274,7 +269,7 @@ export default {
       //     }
       //   })
     },
-    getCustomer (id) {
+    getCustomer(id) {
       var _this = this
       var params = {
         Data: {
@@ -298,7 +293,7 @@ export default {
         })
     },
     // 解析表格获取数据
-    exportData () {
+    exportData() {
       var _this = this
       _this.ListObj.body = [] // 表格数据
       _this.ListObj.header = [] // 表格列
@@ -310,12 +305,12 @@ export default {
       // 用FileReader来读取
       var reader = new FileReader()
       // 重写FileReader上的readAsBinaryString方法
-      FileReader.prototype.readAsBinaryString = function (f) {
+      FileReader.prototype.readAsBinaryString = function(f) {
         var binary = ''
         var wb // 读取完成的数据
         var outdata // 你需要的数据
         var reader = new FileReader()
-        reader.onload = function (e) {
+        reader.onload = function(e) {
           // 读取成Uint8Array，再转换为Unicode编码（Unicode占两个字节）
           var bytes = new Uint8Array(reader.result)
           var length = bytes.byteLength
@@ -329,20 +324,20 @@ export default {
           outdata = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])
           // 自定义方法向父组件传递数据
           // console.log(outdata)
-          var ii = 0
           for (var tmp in outdata) {
             var obj = outdata[tmp]
             for (var item in obj) {
-              if (ii === 0) {
+              // console.log(item)
+              if (_this.ListObj.header.indexOf(item) === -1 && item.indexOf('EMPTY') === -1) {
                 _this.ListObj.header.push(item)
                 // _this.ListObj.header.push('操作');
               }
             }
             // obj.操作='删除'
             _this.ListObj.body.push(obj)
-            ii++
           }
           // _this.ListObj.header.push('操作');
+          console.log(_this.ListObj)
           // console.log(JSON.stringify(_this.ListObj.header) + '_________' + JSON.stringify(_this.ListObj.body))
           // _this.loadTable()
         }

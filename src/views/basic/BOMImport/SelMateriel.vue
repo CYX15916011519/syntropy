@@ -18,6 +18,7 @@
 
 <script>
 export default {
+  name: 'SelMateriel',
   data() {
     return {
       data: [],
