@@ -93,16 +93,16 @@ export default {
     AddOrEdit: () => import('./codemanage2/AddOrEdit'),
     Import: () => import('./codemanage2/Import')
   },
-  mounted () {
+  mounted() {
     this.OnSearch()
   },
   name: 'Codemanage2',
   computed: {
-    GettreeData () {
+    GettreeData() {
       return this.treeData
     }
   },
-  data () {
+  data() {
     return {
       currentComponet: '',
       showModel: false,
@@ -129,34 +129,37 @@ export default {
   },
   methods: {
     // 导入
-    OnImport () {
+    OnImport() {
       this.$refs.Import.showModal()
     },
     // s
-    OnHandle (value) {
+    OnHandle(value) {
       value()
     },
     // 刷新
-    OnReload () {
+    OnReload() {
       this.selectedRowKeys = []
       this.OnTableSearch()
     },
     // 新增
-    OnAdd () {
+    OnAdd() {
       if (this.selectedKeys.length === 0) {
         this.$message.warning('请选择客户')
       } else {
         this.$refs.AddOrEdit.show({ FCustomer: this.TreeselectedRows.FNumber })
       }
     },
-    OnEdit () {
+    OnEdit() {
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要修改的数据')
       } else {
-        this.$refs.AddOrEdit.show({ FBillNo: this.selectedRows[0].FBillNo })
+        this.$refs.AddOrEdit.show({
+          FBillNo: this.selectedRows[0].FBillNo,
+          list: [{ FNumber: this.selectedRows[0].FCustomer, FName: this.selectedRows[0].FMeterialCode_DSPName }]
+        })
       }
     },
-    OnDelete () {
+    OnDelete() {
       var _this = this
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要删除的数据')
@@ -185,43 +188,43 @@ export default {
         this.$message.warning('请选择1条要删除的数据')
       }
     },
-    Close () {
+    Close() {
       this.currentComponet = ''
       this.showModel = false
     },
     // s
-    onExpand (expandedKeys) {
+    onExpand(expandedKeys) {
       this.expandedKeys = expandedKeys
       this.autoExpandParent = false
     },
-    onCheck (checkedKeys) {
+    onCheck(checkedKeys) {
       // console.log('onCheck', checkedKeys)
       this.checkedKeys = checkedKeys
     },
-    onSelect (selectedKeys, info) {
+    onSelect(selectedKeys, info) {
       this.selectedKeys = selectedKeys
       this.selectedRows = []
       this.TreeselectedRows = info.node.dataRef
       this.OnTableSearch()
     },
     // 切换分页
-    onPaginationChange (page, size) {
+    onPaginationChange(page, size) {
       this.pagination.current = page
       this.pagination.pageSize = size
       this.params.SkipCount = this.pagination.current - 1
       this.params.MaxResultCount = this.pagination.pageSize
       this.OnSearch()
     },
-    onSelectChange (selectedRowKeys, selectedRows) {
+    onSelectChange(selectedRowKeys, selectedRows) {
       this.selectedRows = selectedRows
       this.selectedRowKeys = selectedRowKeys
     },
-    handleTableChange (pagination, filters, sorter) {
+    handleTableChange(pagination, filters, sorter) {
       this.params.Sorting = sorter.field + ' ' + (sorter.order + '').replace('end', '')
       // console.log(sorter)
       this.OnSearch()
     },
-    OnSearchParams () {
+    OnSearchParams() {
       if (this.selectedKeys.length === 0) {
         this.$message.warning('请选择客户')
         return {}
@@ -231,10 +234,10 @@ export default {
         }
       }
     },
-    OnSearch (type) {
+    OnSearch(type) {
       this.GetCustomList()
     },
-    OnTableSearch () {
+    OnTableSearch() {
       var params = {
         Data: {
           Top: '100',
@@ -266,7 +269,7 @@ export default {
           _this.loading = false
         })
     },
-    GetCustomList () {
+    GetCustomList() {
       var _this = this
       _this.$store.dispatch('CustomerGetAll', {}).then(() => {
         // console.log(this.$store.state.Customer.List)
@@ -285,7 +288,7 @@ export default {
         }
       })
     },
-    onChange (e) {
+    onChange(e) {
       const value = e.target.value
     }
   }

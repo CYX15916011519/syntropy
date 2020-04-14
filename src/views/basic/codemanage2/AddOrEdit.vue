@@ -198,6 +198,7 @@ export default {
       this.IsEdit = false
       if (obj.FBillNo !== undefined) {
         this.IsEdit = true
+        this.data = obj.list
         obj = {
           Data: {
             FBillNo: obj.FBillNo
