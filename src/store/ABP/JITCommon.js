@@ -1,12 +1,16 @@
-import { GetNumber } from '@/api/ABP/JITCommon'
+import { GetNumber,GetNumberList } from '@/api/ABP/JITCommon'
 
 const JITCommon = {
   state: {
-    GetNumber: {}
+    GetNumber: {},
+    GetNumberList: {}
   },
   mutations: {
     SET_GETNUMBER: (state, GetNumber) => {
       state.GetNumber = GetNumber
+    },
+    SET_GETNUMBERLISR: (state, GetNumberList) => {
+      state.GetNumberList = GetNumberList
     }
   },
 
@@ -17,6 +21,18 @@ const JITCommon = {
         GetNumber(parame)
           .then(response => {
             commit('SET_GETNUMBER', response)
+            resolve(response)
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
+    JITCommonGetNumberList ({ commit }, parame) {
+      return new Promise((resolve, reject) => {
+        GetNumberList(parame)
+          .then(response => {
+            commit('SET_GETNUMBERLISR', response)
             resolve(response)
           })
           .catch(error => {

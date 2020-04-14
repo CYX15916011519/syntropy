@@ -108,6 +108,7 @@ export default {
       showModel: false,
       selectedKeys: [],
       selectedRows: [],
+      TreeselectedRows: [],
       treeData: [{ title: '客户', key: '', children: [] }],
       data: [],
       pagination: {
@@ -145,7 +146,7 @@ export default {
       if (this.selectedKeys.length === 0) {
         this.$message.warning('请选择客户')
       } else {
-        this.$refs.AddOrEdit.show({ FCustomer: this.selectedKeys[0] })
+        this.$refs.AddOrEdit.show({ FCustomer: this.TreeselectedRows.FNumber })
       }
     },
     OnEdit () {
@@ -199,7 +200,8 @@ export default {
     },
     onSelect (selectedKeys, info) {
       this.selectedKeys = selectedKeys
-      console.log(selectedKeys)
+      this.selectedRows = []
+      this.TreeselectedRows = info.node.dataRef
       this.OnTableSearch()
     },
     // 切换分页

@@ -73,7 +73,6 @@ export default {
     this.GetStockList()
     this.loadTable()
     this.DataCheck()
-    this.loadWLFNumber()
   },
   data() {
     return {
@@ -155,7 +154,7 @@ export default {
       this.dataSource.forEach(f => {
         if (di.indexOf(f.FNUMBER) === -1) {
           di.push(f.FNUMBER)
-          diclist.push({ FNUMBER: f.FNUMBER, FNAME: f.FNAME, FParentID: f.FParentID })
+          diclist.push({ FNUMBER: f.FNUMBER, FNAME: f.FNAME, FParentID: '1038' })
         }
       })
       this.$refs.SelBOMGroup.showModal(this.getSQLReport75, diclist)
@@ -163,13 +162,14 @@ export default {
     // 更新BOM单组别
     UpdateFParentID(list) {
       var _this = this
-       list.forEach(f => {
-          _this.dataSource.forEach(a => {
-            if (a.FNUMBER === f.FNUMBER) {
-              a.FParentID = f.FParentID
-            }
-          })
+      var list2 = JSON.parse(JSON.stringify(list))
+      list2.forEach(f => {
+        _this.dataSource.forEach(a => {
+          if (a.FNUMBER === f.FNUMBER) {
+            a.FParentID = f.FParentID
+          }
         })
+      })
       var d = _this.dataSource
       _this.dataSource = null
       _this.dataSource = d
@@ -193,7 +193,7 @@ export default {
         }
       } else {
         if (type === 'FNUMBER' || type === 'FParentID') {
-          return record.FNUMBER === record.FNumber
+          return record.FNUMBER !== '' && record.FERPCLSNAME !== '外购' && record.FBOMNUMBER === ''
         }
       }
     },
@@ -228,15 +228,66 @@ export default {
         _this.ApiData['Stock'] = res.Data.Data
       })
     },
-    // 检验数据
+    // 去重物料
+    GetDiclist() {
+      var diclist = []
+      // 物料去重
+      this.listObj.forEach(f => {
+        if (diclist.indexOf(f.Number) === -1) {
+          diclist.push(f.Number)
+        }
+      })
+      return diclist
+    },
     DataCheck() {
+      var _this = this
+      //
+      var diclist = this.GetDiclist()
+      // 参数
+      var params = {
+        Data: {
+          PageSize: diclist.length,
+          PageIndex: '1'
+        },
+        '*Number*': diclist.join(','),
+        '*CustNo*': _this.CustID,
+        SQLReport: _this.$Api.BOMImportCheckUrl
+      }
+      //
+      var StatusCode = 200
+      var DataResult = []
+      _this.$store
+        .dispatch('SQLReportGetAll', params)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode === 200) {
+            var result = res.Data.DATA
+            if (result.length > 0) { 
+              DataResult = result
+            }
+          } else {
+            this.$message.error('检验失败，请检查Excel格式是否合格！')
+          }
+        })
+        .catch(c => {
+          StatusCode = 0
+        })
+        .finally(f => {
+          _this.loading = false
+          if (StatusCode === 200) {
+            _this.UpdateTable(DataResult)
+          }
+        })
+    },
+    // 检验数据
+    DataCheck1() {
       var _this = this
       //
       var diclist = []
       // 物料去重
       _this.listObj.forEach(f => {
-        if (diclist.indexOf(f.FNumber) === -1) {
-          diclist.push(f.FNumber)
+        if (diclist.indexOf(f.Number) === -1) {
+          diclist.push(f.Number)
         }
       })
       //
@@ -261,7 +312,7 @@ export default {
               var result = res.Data.DATA
               if (result.length > 0) {
                 var resultMX = result[0]
-                resultMX['FNumber'] = item
+                resultMX['Number'] = item
                 DataResult.push(resultMX)
               }
             } else {
@@ -286,11 +337,15 @@ export default {
       var col = true
       DataResult.forEach(item => {
         _this.dataSource.forEach(f => {
-          if (f.FNumber === item.FNumber) {
+          if (f.Number === item.FMETERNAME) {
             var key = Object.keys(item)
             key.forEach(k => {
-              if (col && k !== 'FNumber' && k !== 'FNUMBER') {
-                if (JSON.stringify(_this.columns).indexOf(JSON.stringify({ title: k, dataIndex: k, key: k, width: '145' })) === -1) {
+              if (col && k !== 'Number' && k !== 'FNUMBER') {
+                if (
+                  JSON.stringify(_this.columns).indexOf(
+                    JSON.stringify({ title: k, dataIndex: k, key: k, width: '145' })
+                  ) === -1
+                ) {
                   _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
                 }
               }
@@ -300,7 +355,10 @@ export default {
           }
         })
       })
-      _this.dataSource = _this.dataSource
+      var list = _this.dataSource
+      _this.dataSource = null
+      _this.dataSource = list
+      // _this.loadWLFNumber()
     },
     // 保存校验
     SaveCheck() {
@@ -353,14 +411,14 @@ export default {
               yudao++
             }
             // 表头
-            if (k.Level === num && yudao === index) {
+            if (k.Level * 1 === num && yudao === index) {
               // 形成BOM 表头
               GetTF = true
               obj = k
             }
             // 表明细
             if (GetTF && yudao === index) {
-              if (k.Level === num + 1) {
+              if (k.Level * 1 === num + 1) {
                 child.push(k)
               }
             }
@@ -395,7 +453,7 @@ export default {
       SaveList.forEach(item => {
         // 表头
         var head = JSON.parse(JSON.stringify(BOMTmp.Data.Page1[0]))
-        // var api1 = _this.ApiData[item.FNUMBER]
+        var api1 = _this.ApiData[item.FNUMBER]
         // console.log(item.FNUMBER)
         var day1 = new Date()
         var now = day1.getFullYear() + '-' + (day1.getMonth() + 1) + '-' + day1.getDate() + ' ' + '00:00:00'
@@ -404,9 +462,7 @@ export default {
         head.FPercentItemID.FNumber = item.FNUMBER
         head.FPercentItemID.FName = item.FNAME
         //
-        var FPercentUnitID = _this.Select.FPercentUnitID.filter(f => {
-          return f.FName === item['FUnitID']
-        })[0]
+        var FPercentUnitID = api1.FUnitID
         head.FPercentUnitID.FNumber = FPercentUnitID['FNumber']
         head.FPercentUnitID.FName = FPercentUnitID['FName']
         //
@@ -417,53 +473,49 @@ export default {
         head.FParentID.FNumber = FParentID['FNumber']
         head.FParentID.FName = FParentID['FName']
         //
-        head.FAuxQty = item.FAuxQtyScrap
+        head.FAuxQty = item['BOM.Qty']
         // 明细
         var bodylist = []
         item.child.forEach(f => {
           var body = JSON.parse(JSON.stringify(BOMTmp.Data.Page2[0]))
           body.FDetailID = _this.uuid()
-          // var api2 = _this.ApiData[f.FNUMBER]
+          var api2 = _this.ApiData[f.FNUMBER]
           body.FItemID.FNumber = item.FNUMBER
           body.FItemID.FName = item.FNAME
           //
           var FMaterielType = _this.Select.FMaterielType.filter(a => {
-            return a.FName === f['FMaterielType']
+            return a.FName === '普通件'
           })[0]
           body.FMaterielType.FNumber = FMaterielType['FNumber']
           body.FMaterielType.FName = FMaterielType['FName']
           //
           var FMarshalType = _this.Select.FMarshalType.filter(a => {
-            return a.FName === f['FMarshalType']
+            return a.FName === '通用'
           })[0]
           body.FMarshalType.FNumber = FMarshalType['FNumber']
           body.FMarshalType.FName = FMarshalType['FName']
           //
           var FBackFlush = _this.Select.FBackFlush.filter(a => {
-            return a.FName === f['FBackFlush']
+            return a.FName === '否'
           })[0]
           body.FBackFlush.FNumber = FBackFlush['FNumber']
           body.FBackFlush.FName = FBackFlush['FName']
-          //
+
           var FStockIDList = _this.ApiData['Stock']
-          var FStockID = FStockIDList.filter(a => {
-            return a.FName === f['FStockID']
-          })[0]
+          var FStockID = FStockIDList[0]
           body.FStockID.FNumber = FStockID['FNumber']
           body.FStockID.FName = FStockID['FName']
           //
-          var FUnitID = _this.Select.FUnitID.filter(a => {
-            return a.FName === f['FUnitID']
-          })[0]
+          var FUnitID = api2.FUnitID
           body.FUnitID.FNumber = FUnitID['FNumber']
           body.FUnitID.FName = FUnitID['FName']
           //
-          body.FAuxQtyScrap = f.FAuxQtyScrap
-          body.FScrap = f.FScrap
-          body.FPositionNo = f.FPositionNo
-          body.FMachinePos = f.FMachinePos
-          body.FOffSetDay = f.FOffSetDay
-          body.FNote0 = f.FNote0
+          body.FAuxQtyScrap = item['BOM.Qty']
+          // body.FScrap = 1
+          // body.FPositionNo = 1
+          // body.FMachinePos = 1
+          // body.FOffSetDay = 1
+          body.FNote0 = f.Description
           //
           bodylist.push(body)
         })
@@ -472,33 +524,43 @@ export default {
       })
       if (EndList.length === 0) {
         this.$message.info('没有要保存的数据')
+        this.$emit('nextStep')
         return true
       }
+      this.FormalSaveBOM(EndList, 0)
+    },
+    FormalSaveBOM(EndList, i) {
+      if (EndList.length === i) {
+        this.$message.success('全部保存成功')
+        this.$emit('nextStep')
+        return
+      }
+      var _this = this
       this.spinning = true
-      var i = 0
-      var interror = 0
       // 开始保存BOM
-      EndList.forEach(async (item, index) => {
-        await _this.$store
-          .dispatch('BOMSave', item)
-          .then(res => {
-            if (res.StatusCode !== 200) {
-              this.$message.error(res.Message + ',' + res.Data)
-            } else {
-              this.$message.success('保存成功')
-            }
-          }).
-          catch(c => {
-            interror++
-          })
-          .finally(f => {
-            i++
-            if (i === EndList.length && interror === 0) {
-              this.$emit('nextStep')
-              _this.spinning = false
-            }
-          })
-      })
+      var StatusCode = 200
+      var obj = EndList.slice(i, i + 1)[0]
+      _this.$store
+        .dispatch('BOMSave', obj)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode !== 200) {
+            this.$message.error(res.Message + ',' + res.Data)
+          } else {
+            this.$message.success('保存成功')
+          }
+        })
+        .catch(c => {
+          this.FormalSaveBOM(EndList, i)
+        })
+        .finally(f => {
+          this.spinning = false
+          if (StatusCode !== 200) {
+            this.FormalSaveBOM(EndList, i)
+          } else {
+            this.FormalSaveBOM(EndList, i + 1)
+          }
+        })
     },
     // 加载表格
     loadTable() {
@@ -536,41 +598,49 @@ export default {
     },
     // 加载物料
     loadWLFNumber() {
-      var list = this.dataSource.filter(f => {
-        return f.FNUMBER.length > 0
+      var diclist = []
+      var GetList = []
+      this.dataSource.forEach(item => {
+        if (diclist.indexOf(item.FNUMBER) === -1) {
+          var params = {
+            Data: {
+              FNumber: item.FNUMBER
+            },
+            GetProperty: true
+          }
+          GetList.push(params)
+          diclist.push(item.FNUMBER)
+        }
       })
-      if (list.length > 0) {
-        this.spinning = true
+      this.GetMaterialLIst(GetList, 0)
+    },
+    // 正式获取
+    GetMaterialLIst(list, i) {
+      if (list.length === i) {
+        return
       }
-      var i = 0
-      list.forEach(item => {
-        if (this.ApiData.hasOwnProperty(item.FNUMBER)) {
-          i = i + 1
-          return true
-        }
-        var params = {
-          Data: {
-            FNumber: item.FNUMBER
-          },
-          GetProperty: true
-        }
-        // 获取对应物料
-        this.$store
-          .dispatch('MaterialGetByFItemID', params)
-          .then(res => {
-            if (res.StatusCode !== 200) {
-              this.$message.error(res.Data)
-            } else {
-              this.ApiData[item.FNUMBER] = res.Data[0].Data
-            }
-          })
-          .finally(f => {
-            i = i + 1
-            if (i === list.length) {
-              this.spinning = false
-            }
-          })
-      })
+      var obj = list.slice(i, i + 1)[0]
+      var StatusCode = 200
+      this.$store
+        .dispatch('MaterialGetByFItemID', obj)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode !== 200) {
+            this.$message.error(res.Data)
+          } else {
+            this.ApiData[obj.Data.FNumber] = res.Data[0].Data
+          }
+        })
+        .catch(c => {
+          this.GetMaterialLIst(list, i)
+        })
+        .finally(f => {
+          if (StatusCode === 200) {
+            this.GetMaterialLIst(list, i + 1)
+          } else {
+            this.GetMaterialLIst(list, i)
+          }
+        })
     },
     // 清空表格内容
     empty() {

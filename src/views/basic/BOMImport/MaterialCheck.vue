@@ -15,10 +15,10 @@
         </a-table>
         <footer-tool-bar class="ftl">
           <a-button style="margin-left: 8px" @click="prevStep">上一步</a-button>
-          <a-button style="margin-left: 8px" :loading="loading" @click="CheckData" v-if="!CheckSuccess"
+          <a-button style="margin-left: 8px" :loading="spinning" @click="CheckData" v-if="!CheckSuccess"
             >下一步</a-button
           >
-          <a-button style="margin-left: 8px" :loading="loading" @click="nextStep" v-if="CheckSuccess">下一步</a-button>
+          <a-button style="margin-left: 8px" :loading="spinning" @click="nextStep" v-if="CheckSuccess">下一步</a-button>
         </footer-tool-bar>
       </div>
       <CreateMaterial ref="CreateMaterial" @Success="CheckData" />
@@ -46,7 +46,6 @@ export default {
     return {
       spinning: false,
       delayTime: 500,
-      loading: false,
       dataSource: [],
       columns: [],
       count: 0,
@@ -86,7 +85,11 @@ export default {
       _this.listObj.forEach(item => {
         var keys = Object.keys(item)
         keys.forEach(k => {
-          if (JSON.stringify(_this.columns).indexOf(JSON.stringify({ title: k, dataIndex: k, key: k, width: '145' }))===-1  && k.indexOf('EMPTY') === -1) {
+          if (
+            JSON.stringify(_this.columns).indexOf(JSON.stringify({ title: k, dataIndex: k, key: k, width: '145' })) ===
+              -1 &&
+            k.indexOf('EMPTY') === -1
+          ) {
             _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
           }
         })
@@ -106,17 +109,72 @@ export default {
         this.CustomerSupply()
       }
     },
-    // 自选BOM
-    Optional() {
-      var _this = this
-      _this.loading = true
+    GetDiclist() {
       var diclist = []
       this.dataSource.forEach(f => {
-        if (diclist.indexOf(f.FNumber) === -1) {
-          diclist.push(f.FNumber)
+        var value = f.Number
+        if (diclist.indexOf(value) === -1) {
+          diclist.push(value)
         }
       })
-      var List = this.dataSource
+      return diclist
+    },
+    Optional() {
+      var _this = this
+      _this.spinning = true
+      var diclist = this.GetDiclist()
+      var params = {
+        FUNDetail: 0,
+        Top: 0,
+        PageSize: diclist.length,
+        PageIndex: 1,
+        Filter: " ','+ '" + diclist.join(',') + "'+ ',' like '%,' +FNumber +',%'",
+        OrderBy: 'FNumber asc',
+        Fields: 'FNumber,FName,FItemID'
+      }
+      var objList = []
+      var StatusCode = 200
+      this.$store
+        .dispatch('MaterialGetAll', params)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode !== 200) {
+            this.$message.error(res.Data)
+          } else {
+            var listBE = []
+            res.Data.Data.forEach(f => {
+              listBE.push(f.FNumber)
+            })
+            var endList = diclist.filter(f => {
+              return listBE.indexOf(f) === -1
+            })
+            endList.forEach(f => {
+              objList.push({ FNumber: f, FName: '' })
+            })
+          }
+        })
+        .catch(c => {
+          StatusCode = 0
+          this.$message.warning('访问失败，请稍后重试！')
+        })
+        .finally(k => {
+          _this.spinning = false
+          var tf = StatusCode === 200
+          if (objList.length === 0 && tf) {
+            _this.CheckSuccess = true
+            this.$message.success('物料检验通过')
+            this.nextStep()
+          } else if (tf) {
+            _this.CheckSuccess = false
+            _this.$refs.CreateMaterial.showModal(objList, 0)
+          }
+        })
+    },
+    // 自选BOM
+    Optional1() {
+      var _this = this
+      _this.spinning = true
+      var diclist = this.GetDiclist()
       var objList = []
       //
       var i = 0
@@ -135,14 +193,12 @@ export default {
             if (res.StatusCode !== 200) {
               this.$message.error(res.Data)
             } else {
-              var FName = List.filter(a => {
-                return a.FNumber === f
-              })[0].FName
               if (res.Data.length === 0) {
-                objList.push({ FNumber: f, FName: FName })
+                objList.push({ FNumber: f, FName: '' })
               } else {
                 if (typeof res.Data[0].Data === 'string') {
-                  objList.push({ FNumber: f, FName: FName })
+                  // objList.push({ FNumber: f, FName: '' })
+                  objList.push({ FNumber: f, FName: '1321', SelectMaterial: 9 })
                 }
               }
             }
@@ -153,10 +209,11 @@ export default {
           .finally(k => {
             i++
             if (i === diclist.length) {
-              _this.loading = false
+              _this.spinning = false
               if (objList.length === 0 && interror === 0) {
                 _this.CheckSuccess = true
                 this.$message.success('物料检验通过')
+                this.nextStep()
               } else {
                 _this.CheckSuccess = false
                 _this.$refs.CreateMaterial.showModal(objList, 0)
@@ -171,14 +228,67 @@ export default {
       // 客户信息
       var CustID = _this.custID.split(',')[0]
       // 去重物料
-      var diclist = []
-      this.dataSource.forEach(f => {
-        if (diclist.indexOf(f.FNumber) === -1) {
-          diclist.push(f.FNumber)
-        }
-      })
+      var diclist = this.GetDiclist()
       //
-      var List = this.dataSource
+      var objList = []
+      var params = {
+        Data: {
+          Top: diclist.length + 1,
+          PageSize: diclist.length + 1,
+          PageIndex: 1,
+          Filter:
+            "[FCustomer] = '" + CustID + "' and " + " ','+ '" + diclist.join(',') + "'+ ',' like '%,' + FMeterName +',%'",
+          OrderBy: '[FCustomer] asc',
+          SelectPage: '1',
+          Fields: 'FMeterName,FMeterialCode,FInvMeterName,FTaxCode'
+        }
+      }
+      var StatusCode = 200
+      _this.$store
+        .dispatch('Bill1000200GetAll', params)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode === 200) {
+            var result = res.Data.DATA
+            var listBE = []
+            res.Data.DATA.forEach(f => {
+              listBE.push(f.FMeterName)
+            })
+            var endList = diclist.filter(f => {
+              return listBE.indexOf(f) === -1
+            })
+            endList.forEach(f => {
+              objList.push({ FNumber: f, FName: '' })
+            })
+          } else {
+            this.$message.error(res.Data)
+          }
+        })
+        .catch(c => {
+          StatusCode = 0
+          this.$message.warning('访问失败，请稍后重试！')
+        })
+        .finally(k => {
+          _this.spinning = false
+          var tf = StatusCode === 200
+          if (objList.length === 0 && tf) {
+            _this.CheckSuccess = true
+            this.$message.success('物料检验通过')
+            this.nextStep()
+          } else if (tf) {
+            _this.CheckSuccess = false
+            _this.$refs.CreateMaterial.showModal(objList, _this.custID)
+          }
+        })
+    },
+    // 客供编码
+    CustomerSupply1() {
+      var _this = this
+      // 客户信息
+      var CustID = _this.custID.split(',')[0]
+      // 去重物料
+      var diclist = this.GetDiclist()
+      //
       var objList = []
       //
       var i = 0
@@ -202,10 +312,8 @@ export default {
               var result = res.Data.DATA
               if (result.length > 0) {
               } else {
-                var FName = List.filter(a => {
-                  return a.FNumber === f
-                })[0].FName
-                objList.push({ FNumber: f, FName: FName })
+                // objList.push({ FNumber: f, FName: ''})
+                objList.push({ FNumber: f, FName: '你好', SelectMaterial: 10 })
               }
             } else {
               this.$message.error('检验失败，请检查Excel格式是否合格！')
@@ -218,10 +326,11 @@ export default {
           .finally(k => {
             i++
             if (i === diclist.length) {
-              _this.loading = false
+              _this.spinning = false
               if (objList.length === 0 && interror === 0) {
                 _this.CheckSuccess = true
                 this.$message.success('物料检验通过')
+                this.nextStep()
               } else if (objList.length > 0) {
                 _this.CheckSuccess = false
                 _this.$refs.CreateMaterial.showModal(objList, _this.custID)

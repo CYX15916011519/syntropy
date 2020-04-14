@@ -32,6 +32,7 @@
           :scroll="{ x: 1200 }"
         >
         </a-table>
+        <CreateMaterial ref="CreateMaterial" />
       </a-spin>
     </a-modal>
   </div>
@@ -40,8 +41,11 @@
 <script>
 import XLSX from 'xlsx'
 export default {
+  components: {
+    CreateMaterial: () => import('../BOMImport/CreateMaterial')
+  },
   name: 'Codemanage2Import',
-  data () {
+  data() {
     return {
       spinning: false, // 加载框
       labelCol: { lg: { span: 2 }, sm: { span: 2 } },
@@ -58,28 +62,29 @@ export default {
       columns: [],
       dataSource: [],
       dataSource_en: [],
-      count: 0
+      count: 0,
+      CheckSuccess: false
     }
   },
   computed: {
-    getdataSource () {
+    getdataSource() {
       return this.dataSource
     },
-    getcolumns () {
+    getcolumns() {
       return this.columns
     }
   },
   methods: {
     // 显示加载框
-    ShowLoad () {
+    ShowLoad() {
       this.spinning = true
     },
     // 隐藏加载框
-    HideLoad () {
+    HideLoad() {
       this.spinning = false
     },
     // 加载表格
-    loadTable () {
+    loadTable() {
       var _this = this
       var colobj = []
       var keys = _this.ListObj.header
@@ -87,31 +92,96 @@ export default {
         var col = { title: k, dataIndex: k, key: k, width: '140' }
         colobj.push(col)
       })
-      console.log(colobj)
       this.columns = colobj
       this.dataSource = this.ListObj.body
       this.count = this.ListObj.body.length
+      this.Optional()
     },
-    showModal () {
+    showModal() {
       this.visible = true
     },
-    handleOk (e) {
-      this.SaveBill1000200()
+    handleOk(e) {
+      if (this.CheckSuccess) {
+        this.SaveBill1000200()
+      } else {
+        this.Optional()
+      }
     },
-    handleCancel (e) {
+    handleCancel(e) {
       console.log('Clicked cancel button')
       this.visible = false
     },
-    beforeUpload (file) {
+    beforeUpload(file) {
       this.fileList = [...this.fileList, file]
       return false
     },
-    OnRemove () {
+    OnRemove() {
       this.fileList = []
       this.dataSource = []
     },
+    GetDiclist() {
+      var diclist = []
+      this.dataSource.forEach(f => {
+        var value = f.物料编码
+        if (diclist.indexOf(value) === -1) {
+          diclist.push(value)
+        }
+      })
+      return diclist
+    },
+    Optional() {
+      var _this = this
+      _this.spinning = true
+      var diclist = this.GetDiclist()
+      var params = {
+        FUNDetail: 0,
+        Top: 0,
+        PageSize: diclist.length,
+        PageIndex: 1,
+        Filter: " ','+ '" + diclist.join(',') + "'+ ',' like '%,' +FNumber +',%'",
+        OrderBy: 'FNumber asc',
+        Fields: 'FNumber,FName,FItemID'
+      }
+      var objList = []
+      var StatusCode = 200
+      this.$store
+        .dispatch('MaterialGetAll', params)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode !== 200) {
+            this.$message.error(res.Data)
+          } else {
+            var listBE = []
+            res.Data.Data.forEach(f => {
+              listBE.push(f.FNumber)
+            })
+            var endList = diclist.filter(f => {
+              return listBE.indexOf(f) === -1
+            })
+            endList.forEach(f => {
+              objList.push({ FNumber: f, FName: '' })
+            })
+          }
+        })
+        .catch(c => {
+          console.log(c)
+          StatusCode = 0
+          this.$message.warning('访问失败，请稍后重试！')
+        })
+        .finally(k => {
+          _this.spinning = false
+          var tf = StatusCode === 200
+          if (objList.length === 0 && tf) {
+            _this.CheckSuccess = true
+            this.$message.success('物料检验通过')
+          } else if (tf) {
+            _this.CheckSuccess = false
+            _this.$refs.CreateMaterial.showModal(objList, 0)
+          }
+        })
+    },
     // 解析表格获取数据
-    exportData () {
+    exportData() {
       var _this = this
       _this.ListObj.body = [] // 表格数据
       _this.ListObj.header = [] // 表格列
@@ -123,12 +193,12 @@ export default {
       // 用FileReader来读取
       var reader = new FileReader()
       // 重写FileReader上的readAsBinaryString方法
-      FileReader.prototype.readAsBinaryString = function (f) {
+      FileReader.prototype.readAsBinaryString = function(f) {
         var binary = ''
         var wb // 读取完成的数据
         var outdata // 你需要的数据
         var reader = new FileReader()
-        reader.onload = function (e) {
+        reader.onload = function(e) {
           // 读取成Uint8Array，再转换为Unicode编码（Unicode占两个字节）
           var bytes = new Uint8Array(reader.result)
           var length = bytes.byteLength
@@ -164,7 +234,7 @@ export default {
       reader.readAsBinaryString(f)
     },
     //
-    SaveBill1000200 () {
+    SaveBill1000200() {
       var objList = []
       this.dataSource.forEach(f => {
         objList.push({
@@ -189,7 +259,7 @@ export default {
       })
       this.Save(objList)
     },
-    Save (objList) {
+    Save(objList) {
       objList.forEach((f, index) => {
         var obj = {
           Data: {
@@ -219,14 +289,14 @@ export default {
           })
       })
     },
-    uuid () {
+    uuid() {
       var s = []
       var hexDigits = '0123456789abcdef'
       for (var i = 0; i < 36; i++) {
         s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1)
       }
-      s[14] = '4'// bits 12-15 of the time_hi_and_version field to 0010
-      s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1)// bits 6-7 of the clock_seq_hi_and_reserved to 01
+      s[14] = '4' // bits 12-15 of the time_hi_and_version field to 0010
+      s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1) // bits 6-7 of the clock_seq_hi_and_reserved to 01
       s[8] = s[13] = s[18] = s[23] = '-'
       var uuid = s.join('')
       return uuid

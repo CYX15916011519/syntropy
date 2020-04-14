@@ -21,7 +21,6 @@ export default {
   name: 'SelMateriel',
   data() {
     return {
-      data: [],
       title: '编码对应设置',
       formLayout: 'horizontal',
       spinning: false, // 加载框

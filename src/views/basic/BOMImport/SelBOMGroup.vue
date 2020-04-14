@@ -9,6 +9,7 @@
       @cancel="handleCancel"
       :loading="loading"
     >
+      <a-tag color="cyan">共 {{ this.getdataSource.length }} 个BOM单</a-tag>
       <a-table
         :rowKey="uuid()"
         bordered
@@ -76,7 +77,7 @@ export default {
         this.dataSource = newData
       }
     },
-    // 保存物料
+    // 保存
     handleOk() {
       this.$emit('Success',this.dataSource)
       this.handleCancel()

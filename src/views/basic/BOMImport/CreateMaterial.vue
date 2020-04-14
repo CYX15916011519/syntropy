@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-modal
-      width="70%"
+      width="50%"
       :title="title"
       :visible="visible"
       @ok="handleOk"
@@ -9,6 +9,7 @@
       @cancel="handleCancel"
       :loading="loading"
     >
+      <a-tag color="cyan">共 {{ this.getdataSource.length }} 个物料不存在</a-tag>
       <a-table
         :rowKey="uuid()"
         bordered
@@ -16,12 +17,14 @@
         :dataSource="getdataSource"
         :size="'small'"
         :pagination="false"
-        :scroll="{ x: 1300 }"
       >
+        <template slot="FName" slot-scope="text, record">
+          <a-input v-model="record.FName" placeholder="请输入物料名称" />
+        </template>
         <template slot="SelectMaterial" slot-scope="text, record, index">
           <a-select
             showSearch
-            :placeholder="'请选择物料用户'"
+            :placeholder="'请选择物料模板'"
             style="min-width:120px;"
             v-model="record.SelectMaterial"
             @change="value => handleSelectChange(value, index, 'SelectMaterial')"
@@ -38,6 +41,7 @@
 </template>
 <script>
 export default {
+  name: 'CreateMaterial',
   data() {
     return {
       title: '物料不存在',
@@ -49,7 +53,8 @@ export default {
       MaterialList: [],
       loading: false,
       spinning: false,
-      custID: 0
+      custID: 0,
+      WlNumber: []
     }
   },
   computed: {
@@ -72,18 +77,20 @@ export default {
       var _this = this
       const newData = [...this.dataSource]
       const target = newData[key]
-      if (target) { 
-        // 获取对应物料编码
-        if (target['WlNumber'] === undefined && column === 'SelectMaterial') {
-          var params = { textHead: 'WL' }
-          this.$store.dispatch('JITCommonGetNumber', params).then(res => {
-            if (res.success) {
-              target['WlNumber'] = res.result
-            }
-          })
-        }
+      if (target) {
         target[column] = value
         this.dataSource = newData
+      }
+    },
+    GetJITCommonGetNumberList() {
+      var _this = this
+      if (this.custID !== 0 && _this.WlNumber.length === 0) {
+        var params = { textHead: 'WL', Num: _this.dataSource.length }
+        this.$store.dispatch('JITCommonGetNumberList', params).then(res => {
+          if (res.success) {
+            _this.WlNumber = res.result
+          }
+        })
       }
     },
     // 获取物料模板下拉列表
@@ -111,66 +118,80 @@ export default {
     },
     // 保存物料
     handleOk() {
-      this.SaveMateriel()
+      if (this.SaveCheck()) {
+        this.SaveMateriel()
+      }
+    },
+    // 保存检验
+    SaveCheck() {
+      var list = this.dataSource.filter(f => {
+        return f.FName.length === 0 || f.SelectMaterial.length === 0
+      })
+      if (list.length > 0) {
+        this.$message.warning('请填写完整信息，名称与物料模板不能为空！')
+        return false
+      }
+      return true
     },
     // 保存
-    SaveMateriel() {
+    async SaveMateriel() {
       var _this = this
       this.confirmLoading = true
       // 所有物料JSON
       var newMaterialList = this.MaterialList
-      var list = this.dataSource
-      var j = 0
-      var interror = 0
+
+      var params = {
+        id: 0,
+        Data: []
+      }
       // 保存到K3数据库，循环列表的下拉
-      list.forEach(async (item, index) => {
+      this.dataSource.forEach((item, index) => {
         // 获取物料JSON
         var selmar = newMaterialList.filter(f => {
           return f.id === item.SelectMaterial
         })
-        var params = {
-          id: 0,
-          Data: {}
-        }
         // 替换模板值
         selmar.forEach(tmp => {
           var template = JSON.parse(tmp.template)
-          template['FNumber'] = tmp.fNumber + '.' + (_this.custID === 0 ? item.FNumber : item.WlNumber)
+          template['FNumber'] = _this.custID === 0 ? item.FNumber : tmp.fNumber + '.' + _this.WlNumber[index]
           template['FName'] = item.FName
-          params.Data = template
+          params.Data.push(template)
         })
-        await _this.$store
-          .dispatch('MaterialSave', params)
-          .then(res => {
-            if (res.StatusCode === 200) {
-            } else {
-              this.$message.error('生成物料失败')
-            }
-          })
-          .catch(c => {
-            interror++
-          })
-          .finally(f => {
-            j = j + 1
-            if (j === list.length) {
-              if (_this.custID === 0) {
-                setTimeout(() => {
-                  this.visible = false
-                  this.confirmLoading = false
-                  _this.$emit('Success')
-                }, 2000)
-              } else {
-                _this.Bill1000200Save()
-              }
-            }
-          })
       })
+      var interror = 0
+      var StatusCode = 200
+      _this.$store
+        .dispatch('MaterialSave', params)
+        .then(res => {
+          StatusCode = res.StatusCode
+          if (res.StatusCode === 200) {
+          } else {
+            this.$message.error(res.Data[0].DataDesc)
+            this.$message.error('生成物料失败')
+          }
+        })
+        .catch(c => {
+          StatusCode = 0
+        })
+        .finally(f => {
+          var TF = StatusCode === 200
+          if (_this.custID === 0 && TF) {
+            setTimeout(() => {
+              this.visible = false
+              this.confirmLoading = false
+              this.$emit('Success')
+            }, 2000)
+          } else if (TF) {
+            _this.Bill1000200Save()
+          }
+        })
     },
     // 显示
     showModal(list, custID) {
       this.custID = custID
       this.loadTable(list)
       this.visible = true
+      this.GetJITCommonGetNumberList()
     },
     // 点击取消
     handleCancel(e) {
@@ -182,7 +203,17 @@ export default {
       _this.columns = []
       var keys = Object.keys(list[0])
       keys.forEach(k => {
-        _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
+        if (k !== 'FName' && k !== 'FNumber' && k !== 'SelectMaterial') {
+          _this.columns.push({ title: k, dataIndex: k, key: k, width: '145' })
+        }
+      })
+      _this.columns.push({ title: '物料编码', dataIndex: 'FNumber', key: 'FNumber', width: '145' })
+      _this.columns.push({
+        title: '物料名称',
+        dataIndex: 'FName',
+        key: 'FName',
+        width: '245',
+        scopedSlots: { customRender: 'FName' }
       })
       _this.columns.push({
         title: '选择物料模板',
@@ -191,19 +222,24 @@ export default {
         width: '245',
         scopedSlots: { customRender: 'SelectMaterial' }
       })
+      // if (this.custID !== 0) {
+      //   _this.columns.push({ title: '对应关系', dataIndex: 'DYGX', key: 'DYGX', width: '145' })
+      // }
       this.dataSource = list
       this.count = this.dataSource.length
     },
-    // 生成对应编码
+    // 生成对应编码数据
     Bill1000200Save() {
+      var _this = this
       this.spinning = true
       var newMaterialList = this.MaterialList
-      this.dataSource.forEach(async item => {
+      var SaveList = []
+      this.dataSource.forEach((item, index) => {
         var selmar = newMaterialList.filter(f => {
           return f.id === item.SelectMaterial
         })
         var selobj = selmar[0]
-        var WlNumber =  selobj.fNumber + '.' + item.WlNumber
+        var WlNumber = selobj.fNumber + '.' + _this.WlNumber[index]
         var obj = {
           Data: {
             Page1: [
@@ -229,18 +265,39 @@ export default {
             ]
           }
         }
-        this.$store
-          .dispatch('Bill1000200Save', obj)
-          .then(res => {})
-          .finally(f => {
-            setTimeout(() => {
-              this.visible = false
-              this.confirmLoading = false
-              _this.$emit('Success')
-            }, 2000)
-          })
+        SaveList.push(obj)
       })
+      this.FormalBill1000200Save(SaveList, 0)
     },
+    // 正式保存数据
+    async FormalBill1000200Save(SaveList, i) {
+      if (SaveList.length === i) {
+        setTimeout(() => {
+          this.visible = false
+          this.confirmLoading = false
+          this.$emit('Success')
+        }, 2000)
+        return
+      }
+      var obj = SaveList.slice(i, i + 1)[0]
+      var StatusCode = 200
+      await this.$store
+        .dispatch('Bill1000200Save', obj)
+        .then(res => {
+          StatusCode = res.StatusCode
+        })
+        .catch(c => {
+          this.FormalBill1000200Save(SaveList, i)
+        })
+        .finally(f => {
+          if (StatusCode === 200) {
+            this.FormalBill1000200Save(SaveList, i + 1)
+          } else {
+            this.FormalBill1000200Save(SaveList, i)
+          }
+        })
+    },
+
     // UUID
     uuid() {
       var s = []

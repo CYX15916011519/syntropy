@@ -1,5 +1,13 @@
+// 正式
 const Api = {
-    BOMImportCheckUrl: 'SQLReport83',
-    BOMGroupUrl: 'SQLReport75'
+    BOMGroupUrl: 'SQLReport139',
+    BOMImportCheckUrl: 'SQLReport1139',
+    BOMSubclassUrl: 'SQLReport85'
 }
+// 本地
+// const Api = {
+//     BOMGroupUrl: 'SQLReport75',
+//     BOMImportCheckUrl: 'SQLReport86',
+//     BOMSubclassUrl: 'SQLReport85'
+// }
 export default Api

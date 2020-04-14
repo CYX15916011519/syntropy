@@ -61,7 +61,7 @@ const Material = {
             // console.log(response)
             const result = response.Data
             commit('SET_LIST', result)
-            resolve()
+            resolve(response)
           })
           .catch(error => {
             reject(error)
@@ -69,9 +69,24 @@ const Material = {
       })
     },
     // 保存数据
+    // async MaterialSave ({ commit }, parame) {
+     
+    //     const ml =  await Save(parame)
+    //       .then(response => {
+    //         commit('SET_SAVE', response)
+    //         // resolve(response)
+    //         return response
+    //       })
+    //       .catch(error => {
+    //         // reject(error)
+    //         return error
+    //       })
+    //       return ml 
+    // },
     MaterialSave ({ commit }, parame) {
-      return new Promise(async (resolve, reject) => {
-        await Save(parame)
+     
+      return new Promise((resolve, reject) => {
+        Save(parame)
           .then(response => {
             commit('SET_SAVE', response)
             resolve(response)
@@ -80,7 +95,7 @@ const Material = {
             reject(error)
           })
       })
-    },
+  },
     // 删除数据
     MaterialDelete ({ commit }, parame) {
       return new Promise((resolve, reject) => {

@@ -24,8 +24,8 @@ export function Get (parameter) {
 export function GetAll (parameter) {
   return axios({
     url: api.BaseUrl + api.GetAll,
-    method: 'get',
-    params: parameter
+    method: 'post',
+    data: parameter
   })
 }
 

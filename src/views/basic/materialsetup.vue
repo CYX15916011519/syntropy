@@ -35,7 +35,7 @@
       </a-col>
     </a-row>
     <!-- <component :is="currentComponet" :isHide="showModel" @Success="OnReload"></component> -->
-    <!-- <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" /> -->
+    <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" />
   </a-card>
 </template>
 
@@ -164,7 +164,7 @@ export default {
       if (this.selectedRowKeys.length === 0) {
         this.$message.warning('请选择要修改的数据')
       } else {
-        this.$refs.AddOrEdit.show({ id: this.selectedRowKeys[0] })
+        this.$refs.AddOrEdit.show({ id: this.data[this.selectedRowKeys[0]].id })
       }
     },
     OnDelete () {
@@ -175,7 +175,7 @@ export default {
       } else if (this.selectedRowKeys.length === 1) {
         _this.loading = true
         _this.$store
-          .dispatch('materialTemplateDelete', { id: this.selectedRowKeys[0] })
+          .dispatch('materialTemplateDelete', { id: this.data[this.selectedRowKeys[0]].id })
           .then(res => {
             var Restult = this.$store.state.materialTemplate.deleteRestult
             if (Restult.success) {
