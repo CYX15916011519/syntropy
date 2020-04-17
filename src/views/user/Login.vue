@@ -54,7 +54,7 @@
               @change="handleChange"
               v-model="GetDefaultAccount"
             >
-              <a-select-option v-for="item in AccountList" :key="item.id" :value="item.authorityCode + ',' + item.id">
+              <a-select-option v-for="item in GetAccountList" :key="item.id" :value="item.authorityCode + ',' + item.id">
                 {{ item.name }}
               </a-select-option>
             </a-select>
@@ -164,7 +164,7 @@ export default {
   },
   components: {
     TwoStepCaptcha
-  },
+  }, 
   data() {
     return {
       customActiveKey: 'tab1',
@@ -189,6 +189,9 @@ export default {
     }
   },
   computed: {
+    GetAccountList() {
+      return this.AccountList
+    },
     GetDefaultAccount() {
       var val = ''
       if (this.AccountList.length > 0) {
@@ -221,6 +224,14 @@ export default {
       this.loading = true
       this.loginBtn = true
       _this.AccountList = []
+
+      //
+      _this.AccountList = this.$store.state.K3ApiUrl.connectList.items
+          // _this.AccountList.forEach(item => { 
+          //   this.account =  item.authorityCode
+          //   this.SetBookID = item.id
+          // })
+          //
       this.$store
         .dispatch('connectGetAll', {
           SkipCount: 0,

@@ -36,6 +36,7 @@
     </a-row>
     <!-- <component :is="currentComponet" :isHide="showModel" @Success="OnReload"></component> -->
     <AddOrEdit v-if="HideIF" ref="AddOrEdit" @Success="OnReload" />
+    <SelectMateriel ref="SelectMateriel"/>
   </a-card>
 </template>
 
@@ -85,6 +86,7 @@ const columns = [
 ]
 export default {
   components: {
+    SelectMateriel: () => import('@/JITComponents/SelectMateriel'),
     Handle: () => import('@/JITComponents/handle'),
     pagination: () => import('@/JITComponents/Pagination'),
     Edit: () => import('@/views/basic/materialsetup/Edit.vue'),
@@ -152,6 +154,8 @@ export default {
     },
     // 新增
     OnAdd () {
+      // this.$refs.SelectMateriel.show()
+      // return
       if (this.selectedKeys.length === 0) {
         this.$message.warning('请选择物料')
       } else {

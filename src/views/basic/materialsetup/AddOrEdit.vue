@@ -234,7 +234,7 @@ export default {
                 this.$message.error(tmp.name + '不能为空')
                 throw new Error(true)
               }
-              if (JF[tmp.id] === 0 && tmp.type === 'int') {
+              if (JF[tmp.id] === 0 && (tmp.type === 'int'||tmp.type === 'number')) {
                 this.$message.error(tmp.name + '不能为0')
                 throw new Error(true)
               }

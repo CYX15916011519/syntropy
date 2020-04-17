@@ -25,7 +25,7 @@
           </a-select>
         </a-form-item>
         <a-form-item label="物料过滤：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-          <a-input-search v-model="keywords" placeholder @search="OnInput" loading />
+          <a-input-search v-model="keywords" placeholder="输入物料一部分编码，必须两个.才能搜索" @search="OnInput" loading />
         </a-form-item>
         <a-form-item label="K3物料编码：" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
           <a-select showSearch style="width: 100%" v-model="form.FMeterialCode.FNumber">

@@ -174,6 +174,7 @@ export default {
           StatusCode = 0
         })
         .finally(f => {
+          this.confirmLoading = false
           var TF = StatusCode === 200
           if (_this.custID === 0 && TF) {
             setTimeout(() => {
@@ -271,6 +272,7 @@ export default {
     },
     // 正式保存数据
     async FormalBill1000200Save(SaveList, i) {
+      this.confirmLoading = true
       if (SaveList.length === i) {
         setTimeout(() => {
           this.visible = false
@@ -290,6 +292,7 @@ export default {
           this.FormalBill1000200Save(SaveList, i)
         })
         .finally(f => {
+          this.confirmLoading = false
           if (StatusCode === 200) {
             this.FormalBill1000200Save(SaveList, i + 1)
           } else {
