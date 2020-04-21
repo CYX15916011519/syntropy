@@ -13,9 +13,7 @@
           :scroll="{ x: 1300 }"
         >
           <template slot="FNUMBER" slot-scope="text, record, index">
-            <a-button icon="search" @click="OnSelectWL(index, record)" v-if="CheckShow(record, 'FNUMBER')">{{
-              record.FNUMBER
-            }}</a-button>
+            <a-button icon="search" @click="OnSelectWL(index, record)">{{ record.FNUMBER }}</a-button>
           </template>
           <template slot="FParentID" slot-scope="text, record, index">
             <a-select
@@ -95,7 +93,9 @@ export default {
         index: 0,
         record: {}
       },
-      CustID: 0
+      CustID: 0,
+      // 成功的BOM单编码
+      BillNo: []
     }
   },
   computed: {
@@ -207,9 +207,20 @@ export default {
         },
         SQLReport: _this.$Api.BOMGroupUrl
       }
-      this.$store.dispatch('SQLReportGetAll', params).then(res => {
-        _this.SQLReport75 = res.Data.DATA
-      })
+       _this.SQLReport75 = []
+      this.$store
+        .dispatch('SQLReportGetAll', params)
+        .then(res => {
+          _this.SQLReport75 = res.Data.DATA
+        })
+        .catch(c => {
+          console.log('GetSQLReport75-->' + c)
+        })
+        .finally(f => {
+          if (_this.SQLReport75 === []) {
+            _this.GetSQLReport75()
+          }
+        })
     },
     // 获取
     GetStockList() {
@@ -224,9 +235,20 @@ export default {
           Fields: 'FNumber,FName'
         }
       }
-      this.$store.dispatch('StockGetAll', params).then(res => {
-        _this.ApiData['Stock'] = res.Data.Data
-      })
+      _this.ApiData['Stock'] = []
+      this.$store
+        .dispatch('StockGetAll', params)
+        .then(res => {
+          _this.ApiData['Stock'] = res.Data.Data
+        })
+        .catch(c => {
+          console.log('GetStockList-->' + c)
+        })
+        .finally(f => {
+          if (_this.ApiData['Stock'] === []) {
+            _this.GetStockList()
+          }
+        })
     },
     // 去重物料
     GetDiclist() {
@@ -262,7 +284,7 @@ export default {
           StatusCode = res.StatusCode
           if (res.StatusCode === 200) {
             var result = res.Data.DATA
-            if (result.length > 0) { 
+            if (result.length > 0) {
               DataResult = result
             }
           } else {
@@ -358,7 +380,7 @@ export default {
       var list = _this.dataSource
       _this.dataSource = null
       _this.dataSource = list
-      // _this.loadWLFNumber()
+      _this.loadWLFNumber()
     },
     // 保存校验
     SaveCheck() {
@@ -436,14 +458,9 @@ export default {
       // 过滤已经有编码的
       BOMList.forEach(k => {
         // 1.testOK不能等于空并且selectmaterial等于空并且子级不为空的
-        if (k.child && k.FBOMNUMBER === '') {
-          var list = k.child.filter(f => {
-            return f.FNUMBER !== ''
-          })
-          if (list.length > 0) {
-            SaveList.push(k)
-            return true
-          }
+        if (k.child && k.FBOMNUMBER === '' && k.FERPCLSNAME !== '外购') {
+          SaveList.push(k)
+          return true
         }
       })
       //
@@ -457,12 +474,12 @@ export default {
         // console.log(item.FNUMBER)
         var day1 = new Date()
         var now = day1.getFullYear() + '-' + (day1.getMonth() + 1) + '-' + day1.getDate() + ' ' + '00:00:00'
-        head.FEntertime = now
-        head.FCheckDate = now
+        head.FEntertime = new Date(now)
+        head.FCheckDate = new Date(now)
         head.FPercentItemID.FNumber = item.FNUMBER
         head.FPercentItemID.FName = item.FNAME
         //
-        var FPercentUnitID = api1.FUnitID
+        var FPercentUnitID = api1['FUnitID']
         head.FPercentUnitID.FNumber = FPercentUnitID['FNumber']
         head.FPercentUnitID.FName = FPercentUnitID['FName']
         //
@@ -480,8 +497,8 @@ export default {
           var body = JSON.parse(JSON.stringify(BOMTmp.Data.Page2[0]))
           body.FDetailID = _this.uuid()
           var api2 = _this.ApiData[f.FNUMBER]
-          body.FItemID.FNumber = item.FNUMBER
-          body.FItemID.FName = item.FNAME
+          body.FItemID.FNumber = f.FNUMBER
+          body.FItemID.FName = f.FNAME
           //
           var FMaterielType = _this.Select.FMaterielType.filter(a => {
             return a.FName === '普通件'
@@ -506,7 +523,7 @@ export default {
           body.FStockID.FNumber = FStockID['FNumber']
           body.FStockID.FName = FStockID['FName']
           //
-          var FUnitID = api2.FUnitID
+          var FUnitID = api2['FUnitID']
           body.FUnitID.FNumber = FUnitID['FNumber']
           body.FUnitID.FName = FUnitID['FName']
           //
@@ -531,6 +548,7 @@ export default {
     },
     FormalSaveBOM(EndList, i) {
       if (EndList.length === i) {
+        this.$emit('setBomNo', this.BillNo)
         this.$message.success('全部保存成功')
         this.$emit('nextStep')
         return
@@ -547,6 +565,7 @@ export default {
           if (res.StatusCode !== 200) {
             this.$message.error(res.Message + ',' + res.Data)
           } else {
+            _this.BillNo.push(res.Data.BillNo)
             this.$message.success('保存成功')
           }
         })

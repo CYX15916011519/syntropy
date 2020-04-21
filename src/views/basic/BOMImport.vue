@@ -10,9 +10,9 @@
       <div class="content">
         <step1 v-if="currentTab === 0" @nextStep="nextStep" @IsSuccess="setTableVal" @SetCustID="SetCustID"/>
         <step2 v-if="currentTab === 1" @nextStep="nextStep" @prevStep="prevStep" :listObj="TableVal" :custID="CustID" />
-        <step3 v-if="currentTab === 2" @nextStep="nextStep" @prevStep="prevStep" :listObj="TableVal" :custID="CustID"/>
-        <step4 v-if="currentTab === 3" @prevStep="prevStep" @finish="finish" />
-      </div>
+        <step3 v-if="currentTab === 2" @nextStep="nextStep" @prevStep="prevStep" @setBomNo="setBomNo" :listObj="TableVal" :custID="CustID"/>
+        <step4 v-if="currentTab === 3" @prevStep="prevStep" @finish="finish" :selBomNo="BomNo" />
+      </div> 
     </a-card>
   </div>
 </template>
@@ -35,7 +35,8 @@ export default {
       // form
       form: null,
       TableVal: {},
-      CustID: 0
+      CustID: 0,
+      BomNo: []
     }
   },
   methods: {
@@ -58,6 +59,10 @@ export default {
     },
     SetCustID (val) {
       this.CustID = val
+    },
+    setBomNo (val) {
+      console.log(val)
+      this.BomNo = val
     }
   }
 }

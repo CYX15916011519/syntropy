@@ -119,7 +119,7 @@ export default {
       if (kk === 1) {
         this.$emit('nextStep')
         this.$emit('IsSuccess', _this.ListObj.body)
-        this.$emit('SetCustID', _this.CustID)
+        this.$emit('SetCustID', '')
         return
       }
       _this.loading = true

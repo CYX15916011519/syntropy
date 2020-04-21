@@ -149,7 +149,7 @@ export default {
               return listBE.indexOf(f) === -1
             })
             endList.forEach(f => {
-              objList.push({ FNumber: f, FName: '' })
+              objList.push({ FNumber: f, FName: '', FChartNumber:  _this.GetFChartNumber(f) })
             })
           }
         })
@@ -258,7 +258,7 @@ export default {
               return listBE.indexOf(f) === -1
             })
             endList.forEach(f => {
-              objList.push({ FNumber: f, FName: '' })
+              objList.push({ FNumber: f, FName: '', FChartNumber: _this.GetFChartNumber(f) })
             })
           } else {
             this.$message.error(res.Data)
@@ -338,6 +338,18 @@ export default {
             }
           })
       })
+    },
+    // 根据物料获取图号
+    GetFChartNumber(val) {
+      var list = this.dataSource.filter(f => {
+        return f.Number === val
+      })
+      if(list.length>0){
+        return list[0]['BOM.Drawing Number']
+      }
+      else{
+        return ''
+      }
     },
     // UUID
     uuid() {

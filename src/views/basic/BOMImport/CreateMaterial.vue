@@ -155,6 +155,7 @@ export default {
           var template = JSON.parse(tmp.template)
           template['FNumber'] = _this.custID === 0 ? item.FNumber : tmp.fNumber + '.' + _this.WlNumber[index]
           template['FName'] = item.FName
+          template['FChartNumber'] = item.FChartNumber
           params.Data.push(template)
         })
       })

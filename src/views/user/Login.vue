@@ -194,7 +194,7 @@ export default {
     },
     GetDefaultAccount() {
       var val = ''
-      if (this.AccountList.length > 0) {
+      if (this.AccountList !== undefined) {
         this.AccountList.forEach(item => {
           val = item.authorityCode + ',' + item.id
           // this.account = val.split(',')[0]
@@ -223,7 +223,7 @@ export default {
       var _this = this
       this.loading = true
       this.loginBtn = true
-      _this.AccountList = []
+      _this.AccountList = null
 
       //
       _this.AccountList = this.$store.state.K3ApiUrl.connectList.items
@@ -239,6 +239,7 @@ export default {
           Sorting: 'name'
         })
         .then(res => {
+           _this.AccountList = null
           _this.AccountList = this.$store.state.K3ApiUrl.connectList.items
           _this.AccountList.forEach(item => {
             var val = item.authorityCode + ',' + item.id

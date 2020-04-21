@@ -2,6 +2,9 @@
   <a-card :bordered="false" style="margin: -24px -24px 0px;">
     <result type="success" :description="description" :title="title">
       <template slot="action">
+        <div style="margin-bottom: 16px">
+          <span v-if="selBomNo.length>0">BOM单号: </span> <a-tag color="blue"  v-for="(tmp,index) in selBomNo" :key="index">{{tmp}}</a-tag>
+        </div>
         <a-button type="primary" @click="finish">再次导入</a-button>
       </template>
     </result>
@@ -18,7 +21,12 @@ const directionType = {
 }
 
 export default {
-  name: 'Success',
+  props: {
+    selBomNo: {
+      type: Array
+    }
+  },
+  name: 'ImportResult',
   components: {
     Result
   },
