@@ -53,6 +53,7 @@
               placeholder="请选择账套"
               @change="handleChange"
               v-model="GetDefaultAccount"
+              :loading="loading"
             >
               <a-select-option v-for="item in GetAccountList" :key="item.id" :value="item.authorityCode + ',' + item.id">
                 {{ item.name }}
@@ -246,6 +247,9 @@ export default {
             this.account = val.split(',')[0]
             this.SetBookID = val.split(',')[1]
           })
+        })
+        .catch(c => {
+          _this.OnSearch()
         })
         .finally(f => {
           if (_this.AccountList.length === 0) {

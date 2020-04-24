@@ -153,7 +153,27 @@ export default {
     // 提交
     handleSubmit() {
       if (this.selectedRowKeys.length > 0) {
-          
+        var params = {
+          Data: {
+            FNumber: this.selectedRows[0].FNumber
+          },
+          GetProperty: true
+        }
+        this.ShowLoad()
+        // 获取对应物料
+        this.$store
+          .dispatch('MaterialGetByFItemID', params)
+          .then(res => {
+            if (res.StatusCode !== 200) {
+              this.$message.error(res.Data)
+            } else {
+              this.$emit('Success', this.selectedRows[0].FNumber, res.Data[0].Data)
+              this.handleCancel()
+            }
+          })
+          .finally(f => {
+            this.HideLoad()
+          })
       } else {
         this.$message.warning('请选择物料')
       }

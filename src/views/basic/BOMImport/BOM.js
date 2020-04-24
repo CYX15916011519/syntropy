@@ -54,7 +54,8 @@ var TemplateSave = {
           FIsCharSourceItem: '',
           FEntertime: '',
           FCheckDate: '',
-          FStatus: ''
+          FStatus: '',
+          FHeadSelfZ0136: ''
         }
       ],
       Page2: [

@@ -34,11 +34,11 @@
         <footer-tool-bar class="ftl">
           <a-button style="margin-left: 8px" @click="prevStep">上一步</a-button>
           <a-button style="margin-left: 8px" @click="OnSelectBOMGroup">批量选择BOM单组别</a-button>
-          <a-button style="margin-left: 8px" :loading="loading" type="primary" @click="nextStep">提交</a-button>
+          <a-button style="margin-left: 8px" :loading="loading" type="primary" @click="nextStep1">提交</a-button>
         </footer-tool-bar>
       </div>
     </a-spin>
-    <SelMateriel ref="SelMateriel" @Success="OnReload" />
+    <SelectMateriel ref="SelectMateriel" @Success="OnReload" />
     <SelBOMGroup ref="SelBOMGroup" @Success="UpdateFParentID" />
   </div>
 </template>
@@ -49,7 +49,7 @@ import TemplateSave from '@/views/basic/BOMImport/BOM'
 import Select from '@/views/basic/BOMImport/selectBOM'
 export default {
   components: {
-    SelMateriel: () => import('@/views/basic/BOMImport/SelMateriel.vue'),
+    SelectMateriel: () => import('@/JITComponents/SelectMateriel.vue'),
     SelBOMGroup: () => import('@/views/basic/BOMImport/SelBOMGroup')
   },
   name: 'BOMImportCheck',
@@ -118,10 +118,12 @@ export default {
       this.$emit('prevStep')
     },
     // 下一步
-    nextStep() {
+    nextStep1() {
+      console.log('开始校验')
       if (this.SaveCheck()) {
         return
       }
+      console.log('检验通过')
       // BOM类型的
       var inputlist = this.dataSource.filter(f => {
         return f.FNUMBER !== ''
@@ -145,7 +147,7 @@ export default {
     OnSelectWL(index, record) {
       this.SelectModel.index = index
       this.SelectModel.record = record
-      this.$refs.SelMateriel.show()
+      this.$refs.SelectMateriel.show()
     },
     // 批量选择BOM单组
     OnSelectBOMGroup() {
@@ -174,6 +176,7 @@ export default {
       _this.dataSource = null
       _this.dataSource = d
     },
+    
     // 刷新选择行
     OnReload(FNumber, obj) {
       const newData = [...this.dataSource]
@@ -227,7 +230,7 @@ export default {
       var _this = this
       var params = {
         Data: {
-          Top: '100',
+          Top: '0',
           PageSize: '1000',
           PageIndex: '1',
           Filter: "FNumber like '%%' ",
@@ -383,25 +386,19 @@ export default {
       _this.loadWLFNumber()
     },
     // 保存校验
-    SaveCheck() {
-      var checklist = this.dataSource.filter(f => {
-        return f.FNUMBER === ''
-      })
-      if (checklist.length > 0) {
-        this.$message.warning('请选择模板')
-        return true
-      }
+    SaveCheck() {  
       var BOMlist = this.dataSource.filter(f => {
-        return f.FParentID === '' && f.FBOMNUMBER === '' && f.FERPCLSNAME !== '外购'
-      })
+        return (f.FParentID === '' || f.FParentID === undefined) && f.FBOMNUMBER === '' && f.FERPCLSNAME !== '外购'
+      }) 
       if (BOMlist.length > 0) {
-        this.$message.warning('请选择BOM单组别,和输入物料')
+        this.$message.warning('请选择BOM单组别')
         return true
       }
       return false
     },
     // 保存BOM
     SaveBOM() {
+      console.log('SaveBOM -- > 1')
       var _this = this
       var BomData = _this.dataSource
       // 所有输入的物料
@@ -474,6 +471,7 @@ export default {
         // console.log(item.FNUMBER)
         var day1 = new Date()
         var now = day1.getFullYear() + '-' + (day1.getMonth() + 1) + '-' + day1.getDate() + ' ' + '00:00:00'
+        head.FHeadSelfZ0136 = new Date(now)
         head.FEntertime = new Date(now)
         head.FCheckDate = new Date(now)
         head.FPercentItemID.FNumber = item.FNUMBER
@@ -539,25 +537,30 @@ export default {
         //
         EndList.push({ Data: { Page1: [head], Page2: bodylist } })
       })
+       console.log('SaveBOM -- > 2')
       if (EndList.length === 0) {
         this.$message.info('没有要保存的数据')
         this.$emit('nextStep')
         return true
       }
+       console.log('SaveBOM -- > 3')
       this.FormalSaveBOM(EndList, 0)
     },
     FormalSaveBOM(EndList, i) {
+       console.log('FormalSaveBOM -- > 1'+','+i)
       if (EndList.length === i) {
         this.$emit('setBomNo', this.BillNo)
         this.$message.success('全部保存成功')
         this.$emit('nextStep')
         return
       }
+      console.log('FormalSaveBOM -- > 2'+','+i)
       var _this = this
       this.spinning = true
       // 开始保存BOM
       var StatusCode = 200
       var obj = EndList.slice(i, i + 1)[0]
+      console.log('FormalSaveBOM -- > 3'+','+i)
       _this.$store
         .dispatch('BOMSave', obj)
         .then(res => {
